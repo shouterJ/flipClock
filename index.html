@@ -6,6 +6,76 @@
   <title>Matrix Flip Clock</title>
   <style>
   @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+    
+    :root {
+      --digit-width: 150px;
+      --digit-height: 200px;
+      --digit-font-size: 140px;
+      --colon-size: 120px;
+      --gap: 20px;
+      --border-radius: 28px;
+    }
+    
+    /* Mobile devices */
+    @media (max-width: 480px) {
+      :root {
+        --digit-width: 70px;
+        --digit-height: 95px;
+        --digit-font-size: 65px;
+        --colon-size: 55px;
+        --gap: 8px;
+        --border-radius: 12px;
+      }
+    }
+    
+    /* Small tablets */
+    @media (min-width: 481px) and (max-width: 768px) {
+      :root {
+        --digit-width: 100px;
+        --digit-height: 135px;
+        --digit-font-size: 90px;
+        --colon-size: 80px;
+        --gap: 12px;
+        --border-radius: 18px;
+      }
+    }
+    
+    /* Large tablets */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      :root {
+        --digit-width: 120px;
+        --digit-height: 160px;
+        --digit-font-size: 110px;
+        --colon-size: 95px;
+        --gap: 15px;
+        --border-radius: 22px;
+      }
+    }
+    
+    /* Large desktops and 4K */
+    @media (min-width: 1920px) {
+      :root {
+        --digit-width: 200px;
+        --digit-height: 270px;
+        --digit-font-size: 190px;
+        --colon-size: 160px;
+        --gap: 30px;
+        --border-radius: 35px;
+      }
+    }
+    
+    /* 4K and ultra-wide */
+    @media (min-width: 2560px) {
+      :root {
+        --digit-width: 280px;
+        --digit-height: 380px;
+        --digit-font-size: 270px;
+        --colon-size: 230px;
+        --gap: 40px;
+        --border-radius: 45px;
+      }
+    }
+
     body {
       background: #000;
       color: #fff;
@@ -13,11 +83,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 10px;
       font-family: 'Quicksand', Arial, sans-serif;
-      overflow: hidden;
+      overflow-x: hidden;
       position: relative;
+      box-sizing: border-box;
     }
     
     /* Matrix background */
@@ -32,51 +104,62 @@
     }
     
     .controls {
-      margin-bottom: 30px;
+      margin-bottom: clamp(15px, 3vw, 30px);
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: clamp(5px, 1vw, 10px);
       align-items: center;
+      justify-content: center;
       transition: opacity 0.3s;
       position: relative;
       z-index: 10;
       backdrop-filter: blur(5px);
       background: rgba(0, 0, 0, 0.5);
-      padding: 10px 20px;
-      border-radius: 12px;
+      padding: clamp(8px, 2vw, 20px);
+      border-radius: clamp(6px, 1.5vw, 12px);
+      max-width: 95vw;
     }
+    
     .controls.hide {
       opacity: 0;
       pointer-events: none;
     }
+    
     .flip-clock {
       display: flex;
-      gap: 20px;
+      gap: var(--gap);
       align-items: center;
       position: relative;
       z-index: 10;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 95vw;
     }
+    
     .digit {
       position: relative;
-      width: 150px;
-      height: 200px;
+      width: var(--digit-width);
+      height: var(--digit-height);
       background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      border-radius: 28px;
+      border-radius: var(--border-radius);
       box-shadow: 0 8px 24px rgba(0, 255, 0, 0.1), 
                   0 0 40px rgba(0, 255, 0, 0.05),
                   inset 0 0 20px rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 140px;
+      font-size: var(--digit-font-size);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
-      margin: 0 2px;
+      margin: 0 clamp(1px, 0.3vw, 2px);
       overflow: hidden;
-      letter-spacing: 2px;
+      letter-spacing: clamp(1px, 0.3vw, 2px);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 255, 0, 0.1);
+      flex-shrink: 0;
     }
+    
     .digit .top, .digit .bottom {
       position: absolute;
       left: 0;
@@ -86,25 +169,28 @@
       background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
       z-index: 1;
     }
+    
     .digit .top {
       top: 0;
       border-bottom: 2px solid rgba(0, 255, 0, 0.2);
-      border-radius: 28px 28px 0 0;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
     }
+    
     .digit .bottom {
       bottom: 0;
       border-top: 2px solid rgba(0, 255, 0, 0.2);
-      border-radius: 0 0 28px 28px;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
     }
+    
     .digit .top span, .digit .bottom span {
       position: absolute;
       left: 0;
       width: 100%;
-      height: 200px;
+      height: var(--digit-height);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 140px;
+      font-size: var(--digit-font-size);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
@@ -112,12 +198,15 @@
                    0 0 20px rgba(0, 255, 255, 0.5),
                    0 0 30px rgba(0, 255, 255, 0.3);
     }
+    
     .digit .top span {
       top: 0;
     }
+    
     .digit .bottom span {
-      top: -100px;
+      top: calc(var(--digit-height) / -2);
     }
+    
     .digit .flip {
       position: absolute;
       left: 0;
@@ -130,31 +219,34 @@
       transform-origin: bottom;
       animation: flip 0.5s forwards;
       z-index: 2;
-      border-radius: 28px 28px 0 0;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
     }
+    
     .digit .flip span {
       position: absolute;
       left: 0;
       width: 100%;
-      height: 200px;
+      height: var(--digit-height);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 140px;
+      font-size: var(--digit-font-size);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
       text-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
                    0 0 20px rgba(0, 255, 255, 0.5);
     }
+    
     @keyframes flip {
       0% { transform: rotateX(0deg); }
       100% { transform: rotateX(-90deg); }
     }
+    
     .colon {
-      font-size: 11.25vw;
+      font-size: var(--colon-size);
       color: #0ff;
-      margin: 0 0.75vw;
+      margin: 0 clamp(2px, 1vw, 15px);
       user-select: none;
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
@@ -162,45 +254,47 @@
                    0 0 20px rgba(0, 255, 255, 0.5),
                    0 0 30px rgba(0, 255, 255, 0.3);
       animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
-    @media (min-width: 2560px) {
-      .colon {
-        font-size: 285px;
-        margin: 0 15px;
-      }
-    }
+    
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
+    
     button {
       background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
       color: #0ff;
       border: 1px solid rgba(0, 255, 255, 0.3);
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 22px;
+      border-radius: clamp(4px, 1vw, 8px);
+      padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px);
+      font-size: clamp(14px, 3vw, 22px);
       cursor: pointer;
       transition: all 0.3s;
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      white-space: nowrap;
     }
+    
     button:hover {
       background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
       border-color: rgba(0, 255, 255, 0.6);
       box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
     }
+    
     .countdown-inputs {
       display: flex;
-      gap: 5px;
+      gap: clamp(2px, 1vw, 5px);
       align-items: center;
+      flex-wrap: wrap;
     }
+    
     .countdown-inputs input[type="number"] {
-      width: 60px;
-      font-size: 22px;
-      padding: 5px;
-      border-radius: 6px;
+      width: clamp(40px, 8vw, 60px);
+      font-size: clamp(14px, 3vw, 22px);
+      padding: clamp(3px, 1vw, 5px);
+      border-radius: clamp(3px, 0.8vw, 6px);
       border: 1px solid rgba(0, 255, 255, 0.3);
       background: rgba(0, 0, 0, 0.7);
       color: #0ff;
@@ -209,24 +303,79 @@
       font-weight: 700;
       text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
     }
+    
     .countdown-inputs span {
       color: #0ff;
       text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      font-size: clamp(14px, 3vw, 22px);
     }
 
     /* Effective time today calculator */
     .hideable-calculator {
-      margin-top: 30px;
+      margin-top: clamp(15px, 3vw, 30px);
       color: #0ff;
-      font-size: 28px;
+      font-size: clamp(16px, 4vw, 28px);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       text-shadow: 0 0 10px #0ff;
       transition: opacity 0.3s;
+      text-align: center;
+      max-width: 95vw;
     }
+    
     .hideable-calculator.hide {
       opacity: 0;
       pointer-events: none;
+    }
+    
+    /* Mobile-specific adjustments */
+    @media (max-width: 480px) {
+      body {
+        padding: 5px;
+      }
+      
+      .flip-clock {
+        gap: calc(var(--gap) / 2);
+      }
+      
+      .controls {
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      
+      .countdown-inputs {
+        justify-content: center;
+        width: 100%;
+        margin-top: 5px;
+      }
+    }
+    
+    /* Very small screens */
+    @media (max-width: 320px) {
+      :root {
+        --digit-width: 50px;
+        --digit-height: 70px;
+        --digit-font-size: 45px;
+        --colon-size: 40px;
+        --gap: 5px;
+        --border-radius: 8px;
+      }
+    }
+    
+    /* Landscape mobile */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        justify-content: flex-start;
+        padding-top: 10px;
+      }
+      
+      .controls {
+        margin-bottom: 10px;
+      }
+      
+      .hideable-calculator {
+        margin-top: 10px;
+      }
     }
   </style>
 </head>
@@ -237,9 +386,9 @@
     <button id="countdownMode">Countdown</button>
     <span class="countdown-inputs" id="countdownInputs" style="display:none;">
       <input type="number" id="countdownHour" min="0" max="99" value="0" />
-      <span style="font-size:22px;">:</span>
+      <span>:</span>
       <input type="number" id="countdownMinute" min="0" max="59" value="1" />
-      <span style="font-size:22px;">:</span>
+      <span>:</span>
       <input type="number" id="countdownSecond" min="0" max="59" value="0" />
     </span>
     <button id="startCountdown" style="display:none;">Start</button>
@@ -260,27 +409,39 @@
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // Recalculate columns when canvas resizes
+      updateMatrixColumns();
     }
+    
+    let drops = [];
+    let columns = 0;
+    
+    function updateMatrixColumns() {
+      const fontSize = Math.max(12, Math.min(16, window.innerWidth / 100));
+      columns = Math.floor(canvas.width / fontSize);
+      
+      // Reset drops array if columns changed
+      if (drops.length !== columns) {
+        drops = [];
+        for (let i = 0; i < columns; i++) {
+          drops[i] = Math.random() * -100;
+        }
+      }
+    }
+    
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
     const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/~`ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾁﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾙﾚﾛﾜﾝ';
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    
-    const drops = [];
-    for (let i = 0; i < columns; i++) {
-      drops[i] = Math.random() * -100;
-    }
     
     function drawMatrix() {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      ctx.fillStyle = '#00ff00';
+      const fontSize = Math.max(12, Math.min(16, window.innerWidth / 100));
       ctx.font = fontSize + 'px monospace';
       
-      for (let i = 0; i < drops.length; i++) {
+      for (let i = 0; i < drops.length && i < columns; i++) {
         const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
         const x = i * fontSize;
         const y = drops[i] * fontSize;
@@ -387,23 +548,24 @@
     }
 
     function showCountdown() {
-  mode = 'countdown';
-  document.getElementById('countdownInputs').style.display = '';
-  document.getElementById('startCountdown').style.display = '';
-  // Stop clock display interval if running
-  if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
-  // Resume countdown display (do not reset timer)
-  let h = Math.floor(countdown / 3600);
-  let m = Math.floor((countdown % 3600) / 60);
-  let s = countdown % 60;
-  renderClock(h, m, s);
-  showControlsTemporarily();
+      mode = 'countdown';
+      document.getElementById('countdownInputs').style.display = '';
+      document.getElementById('startCountdown').style.display = '';
+      // Stop clock display interval if running
+      if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
+      // Resume countdown display (do not reset timer)
+      let h = Math.floor(countdown / 3600);
+      let m = Math.floor((countdown % 3600) / 60);
+      let s = countdown % 60;
+      renderClock(h, m, s);
+      showControlsTemporarily();
     }
 
     // Effective countdown calculator
     let effectiveCountdownSeconds = 0;
     let lastCountdownDuration = 0;
     let lastCountdownDate = new Date().toDateString();
+    
     function updateEffectiveTimeDisplay() {
       let sec = effectiveCountdownSeconds;
       let h = Math.floor(sec / 3600);
@@ -411,6 +573,7 @@
       let s = sec % 60;
       document.getElementById('effectiveTime').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
     }
+    
     function resetEffectiveIfNewDay() {
       let today = new Date().toDateString();
       if (today !== lastCountdownDate) {
@@ -419,6 +582,7 @@
         updateEffectiveTimeDisplay();
       }
     }
+    
     function startCountdown() {
       let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
       let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
@@ -478,13 +642,17 @@
     document.addEventListener('mousemove', showControlsTemporarily);
     document.addEventListener('click', showControlsTemporarily);
     document.addEventListener('keydown', showControlsTemporarily);
+    
+    // Show controls on touch for mobile
+    document.addEventListener('touchstart', showControlsTemporarily);
 
     // Initialize
-  // Set default countdown to 30 minutes and start in countdown mode
-  document.getElementById('countdownHour').value = 0;
-  document.getElementById('countdownMinute').value = 30;
-  document.getElementById('countdownSecond').value = 0;
-  showCountdown();
+    // Set default countdown to 30 minutes and start in countdown mode
+    document.getElementById('countdownHour').value = 0;
+    document.getElementById('countdownMinute').value = 30;
+    document.getElementById('countdownSecond').value = 0;
+    showCountdown();
+    updateEffectiveTimeDisplay();
   </script>
 </body>
 </html>
