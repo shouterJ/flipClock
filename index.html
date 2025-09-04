@@ -163,7 +163,6 @@
                    0 0 30px rgba(0, 255, 255, 0.3);
       animation: pulse 2s infinite;
     }
-    
     @media (min-width: 2560px) {
       .colon {
         font-size: 285px;
@@ -214,6 +213,21 @@
       color: #0ff;
       text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
     }
+
+    /* Effective time today calculator */
+    .hideable-calculator {
+      margin-top: 30px;
+      color: #0ff;
+      font-size: 28px;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 10px #0ff;
+      transition: opacity 0.3s;
+    }
+    .hideable-calculator.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -234,12 +248,15 @@
   <div class="flip-clock" id="flipClock">
     <!-- Digits will be rendered here -->
   </div>
+  <div id="countdownCalculator" class="hideable-calculator">
+    Effective time today: <span id="effectiveTime">00:00:00</span>
+  </div>
+
   <script>
     // Matrix rain effect
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     
-    // Set canvas size
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -247,37 +264,27 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
-    // Matrix characters - mix of letters, numbers, and symbols
     const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/~`ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾁﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾙﾚﾛﾜﾝ';
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     
-    // Create drops for each column
     const drops = [];
     for (let i = 0; i < columns; i++) {
       drops[i] = Math.random() * -100;
     }
     
-    // Draw matrix rain
     function drawMatrix() {
-      // Add translucent black to create trail effect
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Set text properties
       ctx.fillStyle = '#00ff00';
       ctx.font = fontSize + 'px monospace';
       
-      // Draw characters
       for (let i = 0; i < drops.length; i++) {
-        // Random character
         const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
-        
-        // Calculate position
         const x = i * fontSize;
         const y = drops[i] * fontSize;
         
-        // Gradient effect - brighter at the bottom
         const gradient = ctx.createLinearGradient(0, y - fontSize * 5, 0, y);
         gradient.addColorStop(0, 'rgba(0, 255, 0, 0)');
         gradient.addColorStop(0.3, 'rgba(0, 255, 0, 0.4)');
@@ -285,10 +292,8 @@
         gradient.addColorStop(1, 'rgba(0, 255, 0, 1)');
         ctx.fillStyle = gradient;
         
-        // Draw character
         ctx.fillText(char, x, y);
         
-        // Add glow for newest character
         if (drops[i] * fontSize > 0 && Math.random() > 0.9) {
           ctx.shadowBlur = 10;
           ctx.shadowColor = '#00ff00';
@@ -297,36 +302,27 @@
           ctx.shadowBlur = 0;
         }
         
-        // Reset drop when it goes off screen
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
-        
-        // Move drop down
         drops[i]++;
       }
     }
     
-    // Animate matrix rain
     setInterval(drawMatrix, 35);
 
-    // Helper to pad numbers
     function pad(num) {
       return num.toString().padStart(2, '0');
     }
 
-    // Flip digit rendering (fixed to show only half of each digit)
     function renderDigit(container, value, prevValue) {
       container.innerHTML = '';
-      
-      // Create top half
       const top = document.createElement('div');
       top.className = 'top';
       const topSpan = document.createElement('span');
       topSpan.textContent = value;
       top.appendChild(topSpan);
       
-      // Create bottom half
       const bottom = document.createElement('div');
       bottom.className = 'bottom';
       const bottomSpan = document.createElement('span');
@@ -336,7 +332,6 @@
       container.appendChild(top);
       container.appendChild(bottom);
 
-      // Add flip animation if value changed
       if (prevValue !== undefined && prevValue !== value) {
         const flip = document.createElement('div');
         flip.className = 'flip';
@@ -345,21 +340,18 @@
         flip.appendChild(flipSpan);
         container.appendChild(flip);
 
-        // Remove the flip element after animation
         flip.addEventListener('animationend', () => {
           flip.remove();
         });
       }
     }
 
-    // Flip clock logic
     const flipClock = document.getElementById('flipClock');
     let mode = 'clock';
     let countdown = 60;
     let countdownInterval = null;
     let prevDigits = [null, null, null, null, null, null];
 
-    // Only render digits and colons once
     function renderClock(h, m, s) {
       const timeStr = pad(h) + pad(m) + pad(s);
       flipClock.innerHTML = '';
@@ -369,7 +361,6 @@
         renderDigit(digit, timeStr[i], prevDigits[i]);
         flipClock.appendChild(digit);
         prevDigits[i] = timeStr[i];
-        // Add colon only between digit pairs (after 1st and 3rd digit)
         if (i === 1 || i === 3) {
           const colon = document.createElement('div');
           colon.className = 'colon';
@@ -405,63 +396,86 @@
       showControlsTemporarily();
     }
 
+    // Effective countdown calculator
+    let effectiveCountdownSeconds = 0;
+    let lastCountdownDuration = 0;
+    let lastCountdownDate = new Date().toDateString();
+    function updateEffectiveTimeDisplay() {
+      let sec = effectiveCountdownSeconds;
+      let h = Math.floor(sec / 3600);
+      let m = Math.floor((sec % 3600) / 60);
+      let s = sec % 60;
+      document.getElementById('effectiveTime').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    function resetEffectiveIfNewDay() {
+      let today = new Date().toDateString();
+      if (today !== lastCountdownDate) {
+        effectiveCountdownSeconds = 0;
+        lastCountdownDate = today;
+        updateEffectiveTimeDisplay();
+      }
+    }
     function startCountdown() {
       let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
       let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
       let s = parseInt(document.getElementById('countdownSecond').value, 10) || 0;
       countdown = h * 3600 + m * 60 + s;
+      lastCountdownDuration = countdown;
+      resetEffectiveIfNewDay();
       if (isNaN(countdown) || countdown < 1) countdown = 60;
       if (countdownInterval) clearInterval(countdownInterval);
       function update() {
         if (countdown <= 0) {
           clearInterval(countdownInterval);
           renderClock(0, 0, 0);
+          setTimeout(function() {
+            let isEffective = confirm('Was this an effective countdown? Click OK for Yes, Cancel for No.');
+            if (isEffective) {
+              effectiveCountdownSeconds += lastCountdownDuration;
+              updateEffectiveTimeDisplay();
+            }
+          }, 100);
           return;
         }
-        const h = Math.floor(countdown / 3600);
-        const m = Math.floor((countdown % 3600) / 60);
-        const s = countdown % 60;
+        let h = Math.floor(countdown / 3600);
+        let m = Math.floor((countdown % 3600) / 60);
+        let s = countdown % 60;
         renderClock(h, m, s);
         countdown--;
       }
       update();
       countdownInterval = setInterval(update, 1000);
-      showControlsTemporarily();
     }
 
-    document.getElementById('clockMode').onclick = showClock;
-    document.getElementById('countdownMode').onclick = showCountdown;
-    document.getElementById('startCountdown').onclick = startCountdown;
+    document.getElementById('clockMode').addEventListener('click', showClock);
+    document.getElementById('countdownMode').addEventListener('click', showCountdown);
+    document.getElementById('startCountdown').addEventListener('click', startCountdown);
 
-    // Fullscreen logic
-    document.getElementById('fullscreenBtn').onclick = function() {
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
       } else {
         document.exitFullscreen();
       }
-      showControlsTemporarily();
-    };
-
-    // Hide controls after 5s, show on mouse move
-    const controls = document.querySelector('.controls');
-    let hideTimeout = null;
-    function showControlsTemporarily() {
-      controls.classList.remove('hide');
-      if (hideTimeout) clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        controls.classList.add('hide');
-      }, 5000);
-    }
-    document.body.addEventListener('mousemove', function() {
-      controls.classList.remove('hide');
-      if (hideTimeout) clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        controls.classList.add('hide');
-      }, 5000);
     });
 
-    // Start in clock mode
+    function showControlsTemporarily() {
+      const controls = document.querySelector('.controls');
+      const calculator = document.querySelector('#countdownCalculator');
+      controls.classList.remove('hide');
+      calculator.classList.remove('hide');
+      if (controls.hideTimeout) clearTimeout(controls.hideTimeout);
+      controls.hideTimeout = setTimeout(() => {
+        controls.classList.add('hide');
+        calculator.classList.add('hide');
+      }, 5000);
+    }
+
+    document.addEventListener('mousemove', showControlsTemporarily);
+    document.addEventListener('click', showControlsTemporarily);
+    document.addEventListener('keydown', showControlsTemporarily);
+
+    // Initialize
     showClock();
   </script>
 </body>
