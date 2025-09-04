@@ -328,6 +328,108 @@
       pointer-events: none;
     }
     
+    /* Add effective time control */
+    .hideable-add-time {
+      margin-top: clamp(10px, 2vw, 20px);
+      transition: opacity 0.3s;
+      text-align: center;
+      max-width: 95vw;
+    }
+    
+    .hideable-add-time.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .add-time-content {
+      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.4);
+      padding: clamp(8px, 2vw, 15px);
+      border-radius: clamp(6px, 1.5vw, 12px);
+      border: 1px solid rgba(0, 255, 0, 0.2);
+      display: inline-block;
+    }
+    
+    .add-time-label {
+      color: #0ff;
+      font-size: clamp(12px, 3vw, 20px);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 500;
+      text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+      margin-right: clamp(8px, 2vw, 12px);
+    }
+    
+    #pendingTimeDisplay {
+      color: #0ff;
+      font-size: clamp(14px, 3.5vw, 24px);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      margin-right: clamp(8px, 2vw, 12px);
+      min-width: clamp(60px, 12vw, 80px);
+      display: inline-block;
+    }
+    
+    .add-time-buttons {
+      display: inline-flex;
+      gap: clamp(4px, 1vw, 8px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .time-btn {
+  /* Add button flash effect */
+}
+.time-btn.flash {
+  animation: flashGlow 1s infinite alternate;
+  box-shadow: 0 0 20px 5px #0ff, 0 0 40px 10px #0ff;
+}
+@keyframes flashGlow {
+  0% { box-shadow: 0 0 10px 2px #0ff, 0 0 20px 4px #0ff; }
+  100% { box-shadow: 0 0 30px 10px #0ff, 0 0 60px 20px #0ff; }
+}
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      color: #0ff;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: clamp(3px, 0.8vw, 6px);
+      padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 12px);
+      font-size: clamp(10px, 2.5vw, 16px);
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      white-space: nowrap;
+    }
+    
+    .time-btn:hover {
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    
+    .time-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Mobile adjustments for add time control */
+    @media (max-width: 480px) {
+      .add-time-content {
+        padding: 8px;
+      }
+      
+      .add-time-buttons {
+        margin-top: 5px;
+        width: 100%;
+      }
+      
+      .time-btn {
+        flex: 1;
+        min-width: 50px;
+      }
+    }
+    
     /* Mobile-specific adjustments */
     @media (max-width: 480px) {
       body {
@@ -399,6 +501,16 @@
   </div>
   <div id="countdownCalculator" class="hideable-calculator">
     Effective time today: <span id="effectiveTime">00:00:00</span>
+  </div>
+  <div id="addEffectiveTime" class="hideable-add-time">
+    <div class="add-time-content">
+      <span class="add-time-label">Add effective time:</span>
+      <span id="pendingTimeDisplay">00:00:00</span>
+      <div class="add-time-buttons">
+        <button id="addTimeBtn" class="time-btn">Add</button>
+        <button id="clearTimeBtn" class="time-btn">Clear</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -564,6 +676,7 @@
     // Effective countdown calculator
     let effectiveCountdownSeconds = 0;
     let lastCountdownDuration = 0;
+    let pendingEffectiveTime = 0;
     let lastCountdownDate = new Date().toDateString();
     
     function updateEffectiveTimeDisplay() {
@@ -572,6 +685,24 @@
       let m = Math.floor((sec % 3600) / 60);
       let s = sec % 60;
       document.getElementById('effectiveTime').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    
+    function updatePendingTimeDisplay() {
+      let sec = pendingEffectiveTime;
+      let h = Math.floor(sec / 3600);
+      let m = Math.floor((sec % 3600) / 60);
+      let s = sec % 60;
+      document.getElementById('pendingTimeDisplay').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+      
+      // Enable/disable buttons based on pending time
+      document.getElementById('addTimeBtn').disabled = pendingEffectiveTime === 0;
+      document.getElementById('clearTimeBtn').disabled = pendingEffectiveTime === 0;
+        // Flash the add button if pending time is assigned
+        if (pendingEffectiveTime > 0) {
+          document.getElementById('addTimeBtn').classList.add('flash');
+        } else {
+          document.getElementById('addTimeBtn').classList.remove('flash');
+        }
     }
     
     function resetEffectiveIfNewDay() {
@@ -583,6 +714,50 @@
       }
     }
     
+    function addPendingTime() {
+      if (pendingEffectiveTime > 0) {
+        effectiveCountdownSeconds += pendingEffectiveTime;
+        updateEffectiveTimeDisplay();
+        pendingEffectiveTime = 0;
+        updatePendingTimeDisplay();
+        // Remove flashing effect after adding
+    // Flashing effect is handled in updatePendingTimeDisplay
+      }
+    }
+    
+    function clearPendingTime() {
+      pendingEffectiveTime = 0;
+      updatePendingTimeDisplay();
+      // Remove flashing effect after clearing
+      document.getElementById('addTimeBtn').classList.remove('flash');
+    }
+    
+    function editPendingTime() {
+      let currentH = Math.floor(pendingEffectiveTime / 3600);
+      let currentM = Math.floor((pendingEffectiveTime % 3600) / 60);
+      let currentS = pendingEffectiveTime % 60;
+      
+      let newTime = prompt(`Edit time (format: HH:MM:SS)\nCurrent: ${pad(currentH)}:${pad(currentM)}:${pad(currentS)}`, `${pad(currentH)}:${pad(currentM)}:${pad(currentS)}`);
+      
+      if (newTime !== null) {
+        let timeParts = newTime.split(':');
+        if (timeParts.length === 3) {
+          let h = parseInt(timeParts[0], 10) || 0;
+          let m = parseInt(timeParts[1], 10) || 0;
+          let s = parseInt(timeParts[2], 10) || 0;
+          
+          if (h >= 0 && m >= 0 && m < 60 && s >= 0 && s < 60) {
+            pendingEffectiveTime = h * 3600 + m * 60 + s;
+            updatePendingTimeDisplay();
+          } else {
+            alert('Invalid time format. Please use HH:MM:SS format.');
+          }
+        } else {
+          alert('Invalid time format. Please use HH:MM:SS format.');
+        }
+      }
+    }
+
     function startCountdown() {
       let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
       let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
@@ -596,13 +771,11 @@
         if (countdown <= 0) {
           clearInterval(countdownInterval);
           if (mode === 'countdown') renderClock(0, 0, 0);
-          setTimeout(function() {
-            let isEffective = confirm('Was this an effective countdown? Click OK for Yes, Cancel for No.');
-            if (isEffective) {
-              effectiveCountdownSeconds += lastCountdownDuration;
-              updateEffectiveTimeDisplay();
-            }
-          }, 100);
+          
+          // Instead of popup, set pending effective time
+          pendingEffectiveTime = lastCountdownDuration;
+          updatePendingTimeDisplay();
+          
           return;
         }
         let h = Math.floor(countdown / 3600);
@@ -618,6 +791,10 @@
     document.getElementById('clockMode').addEventListener('click', showClock);
     document.getElementById('countdownMode').addEventListener('click', showCountdown);
     document.getElementById('startCountdown').addEventListener('click', startCountdown);
+    
+    // Add effective time controls
+    document.getElementById('addTimeBtn').addEventListener('click', addPendingTime);
+    document.getElementById('clearTimeBtn').addEventListener('click', clearPendingTime);
 
     document.getElementById('fullscreenBtn').addEventListener('click', () => {
       if (!document.fullscreenElement) {
@@ -630,12 +807,17 @@
     function showControlsTemporarily() {
       const controls = document.querySelector('.controls');
       const calculator = document.querySelector('#countdownCalculator');
+      const addTime = document.querySelector('#addEffectiveTime');
+      
       controls.classList.remove('hide');
       calculator.classList.remove('hide');
+      addTime.classList.remove('hide');
+      
       if (controls.hideTimeout) clearTimeout(controls.hideTimeout);
       controls.hideTimeout = setTimeout(() => {
         controls.classList.add('hide');
         calculator.classList.add('hide');
+        addTime.classList.add('hide');
       }, 5000);
     }
 
@@ -653,6 +835,7 @@
     document.getElementById('countdownSecond').value = 0;
     showCountdown();
     updateEffectiveTimeDisplay();
+    updatePendingTimeDisplay();
   </script>
 </body>
 </html>
