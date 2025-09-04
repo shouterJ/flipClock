@@ -374,26 +374,30 @@
       mode = 'clock';
       document.getElementById('countdownInputs').style.display = 'none';
       document.getElementById('startCountdown').style.display = 'none';
-      if (countdownInterval) clearInterval(countdownInterval);
+      // Do NOT clear countdownInterval, so countdown keeps running in background
       function update() {
         const now = new Date();
         renderClock(now.getHours(), now.getMinutes(), now.getSeconds());
       }
       update();
-      countdownInterval = setInterval(update, 1000);
+      // Use a separate interval for clock display
+      if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
+      window.clockDisplayInterval = setInterval(update, 1000);
       showControlsTemporarily();
     }
 
     function showCountdown() {
-      mode = 'countdown';
-      document.getElementById('countdownInputs').style.display = '';
-      document.getElementById('startCountdown').style.display = '';
-      if (countdownInterval) clearInterval(countdownInterval);
-      let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
-      let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
-      let s = parseInt(document.getElementById('countdownSecond').value, 10) || 0;
-      renderClock(h, m, s);
-      showControlsTemporarily();
+  mode = 'countdown';
+  document.getElementById('countdownInputs').style.display = '';
+  document.getElementById('startCountdown').style.display = '';
+  // Stop clock display interval if running
+  if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
+  // Resume countdown display (do not reset timer)
+  let h = Math.floor(countdown / 3600);
+  let m = Math.floor((countdown % 3600) / 60);
+  let s = countdown % 60;
+  renderClock(h, m, s);
+  showControlsTemporarily();
     }
 
     // Effective countdown calculator
@@ -427,7 +431,7 @@
       function update() {
         if (countdown <= 0) {
           clearInterval(countdownInterval);
-          renderClock(0, 0, 0);
+          if (mode === 'countdown') renderClock(0, 0, 0);
           setTimeout(function() {
             let isEffective = confirm('Was this an effective countdown? Click OK for Yes, Cancel for No.');
             if (isEffective) {
@@ -440,7 +444,7 @@
         let h = Math.floor(countdown / 3600);
         let m = Math.floor((countdown % 3600) / 60);
         let s = countdown % 60;
-        renderClock(h, m, s);
+        if (mode === 'countdown') renderClock(h, m, s);
         countdown--;
       }
       update();
@@ -476,7 +480,11 @@
     document.addEventListener('keydown', showControlsTemporarily);
 
     // Initialize
-    showClock();
+  // Set default countdown to 30 minutes and start in countdown mode
+  document.getElementById('countdownHour').value = 0;
+  document.getElementById('countdownMinute').value = 30;
+  document.getElementById('countdownSecond').value = 0;
+  showCountdown();
   </script>
 </body>
 </html>
