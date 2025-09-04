@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Matrix Flip Clock</title>
   <style>
+/* Flash effect for effective time value */
+#effectiveTime.flash {
+  animation: flashEffective 1s linear 1;
+  text-shadow:
+    0 0 80px #fff,
+    0 0 160px #fff,
+    0 0 40px #0ff,
+    0 0 120px #0ff;
+}
+@keyframes flashEffective {
+  0% { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+  10% { text-shadow: 0 0 80px #fff, 0 0 160px #fff, 0 0 40px #0ff, 0 0 120px #0ff; }
+  90% { text-shadow: 0 0 80px #fff, 0 0 160px #fff, 0 0 40px #0ff, 0 0 120px #0ff; }
+  100% { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+}
   @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
     
     :root {
@@ -716,10 +731,14 @@
     
     function addPendingTime() {
       if (pendingEffectiveTime > 0) {
-        effectiveCountdownSeconds += pendingEffectiveTime;
-        updateEffectiveTimeDisplay();
-        pendingEffectiveTime = 0;
-        updatePendingTimeDisplay();
+  effectiveCountdownSeconds += pendingEffectiveTime;
+  updateEffectiveTimeDisplay();
+  // Flash the effective time value
+  const effElem = document.getElementById('effectiveTime');
+  effElem.classList.add('flash');
+  setTimeout(() => effElem.classList.remove('flash'), 1000);
+  pendingEffectiveTime = 0;
+  updatePendingTimeDisplay();
         // Remove flashing effect after adding
     // Flashing effect is handled in updatePendingTimeDisplay
       }
