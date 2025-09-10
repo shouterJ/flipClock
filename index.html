@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -90,7 +91,6 @@
         --border-radius: 45px;
       }
     }
-
     body {
       background: #000;
       color: #fff;
@@ -144,26 +144,38 @@
       pointer-events: none;
     }
     
+    .flip-clock-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      overflow: visible;
+      padding: 20px 0;
+      box-sizing: border-box;
+      min-height: calc(var(--digit-height) + 40px); /* Ensure enough vertical space */
+    }
+    
     .flip-clock {
       display: flex;
       gap: var(--gap);
       align-items: center;
       position: relative;
       z-index: 10;
-      flex-wrap: wrap;
+      flex-wrap: nowrap; /* Prevent wrapping to multiple lines */
       justify-content: center;
       max-width: 95vw;
+      margin: 0 auto;
+      overflow: visible; /* Allow scaling to work properly */
     }
     
     .digit {
       position: relative;
       width: var(--digit-width);
       height: var(--digit-height);
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.5) 0%, rgba(42, 42, 42, 0.5) 100%);
       border-radius: var(--border-radius);
       box-shadow: 0 8px 24px rgba(0, 255, 0, 0.1), 
                   0 0 40px rgba(0, 255, 0, 0.05),
-                  inset 0 0 20px rgba(0, 0, 0, 0.5);
+                  inset 0 0 20px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -172,13 +184,10 @@
       font-weight: 700;
       color: #0ff;
       margin: 0 clamp(1px, 0.3vw, 2px);
-      overflow: hidden;
-      letter-spacing: clamp(1px, 0.3vw, 2px);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 255, 0, 0.1);
+      overflow: visible;
+      letter-spacing: 0;
+      border: 1px solid rgba(0, 255, 0, 0.3);
       flex-shrink: 0;
-      /* Improve perspective rendering on WebKit */
       -webkit-perspective: 1000px;
       perspective: 1000px;
       -webkit-transform-style: preserve-3d;
@@ -190,8 +199,8 @@
       left: 0;
       width: 100%;
       height: 50%;
-      overflow: hidden;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      overflow: visible;
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.5) 0%, rgba(42, 42, 42, 0.5) 100%);
       z-index: 1;
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
@@ -217,13 +226,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: var(--digit-font-size);
+      font-size: calc(var(--digit-font-size) * 0.65);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
-                   0 0 20px rgba(0, 255, 255, 0.5),
-                   0 0 30px rgba(0, 255, 255, 0.3);
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      overflow: visible;
     }
     
     .digit .top span {
@@ -240,9 +252,9 @@
       top: 0;
       width: 100%;
       height: 50%;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      background: linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(26, 26, 26, 0.5) 100%);
       color: #0ff;
-      overflow: hidden;
+      overflow: visible;
       -webkit-transform-origin: bottom;
       transform-origin: bottom;
       -webkit-animation: flip 0.5s forwards;
@@ -261,12 +273,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: var(--digit-font-size);
+      font-size: calc(var(--digit-font-size) * 0.65);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
-                   0 0 20px rgba(0, 255, 255, 0.5);
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      overflow: visible;
     }
     
     @-webkit-keyframes flip {
@@ -288,9 +304,8 @@
       user-select: none;
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8),
-                   0 0 20px rgba(0, 255, 255, 0.5),
-                   0 0 30px rgba(0, 255, 255, 0.3);
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
       -webkit-animation: pulse 2s infinite;
       animation: pulse 2s infinite;
       flex-shrink: 0;
@@ -386,7 +401,6 @@
       text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
       font-size: clamp(14px, 3vw, 22px);
     }
-
     /* Effective time today calculator */
     .hideable-calculator {
       margin-top: clamp(15px, 3vw, 30px);
@@ -545,7 +559,8 @@
       .flip-clock {
         padding: 0 2vw;
         /* Force even tighter spacing if needed */
-        gap: max(var(--min-gap), var(--gap));
+        gap: max(1px, var(--gap));
+        flex-wrap: nowrap; /* Prevent wrapping to multiple lines */
       }
       
       .controls {
@@ -558,24 +573,102 @@
         width: 100%;
         margin-top: 3px;
       }
+      
+      /* Adjust digit sizes for better visibility on small screens */
+      :root {
+        --digit-width: 55px;
+        --digit-height: 80px;
+        --digit-font-size: 50px;
+        --colon-size: 40px;
+        --gap: 4px;
+        --border-radius: 10px;
+      }
     }
     
     /* Emergency single-line enforcement for all screens */
     @media (max-width: 600px) {
+      .flip-clock-container {
+        width: 100%;
+        padding: 0 10px;
+        box-sizing: border-box;
+        min-height: calc(var(--digit-height) + 40px); /* Ensure enough vertical space */
+      }
+      
       .flip-clock {
         /* Calculate exact width needed and scale if necessary */
-        width: min(100%, calc(6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap)) + 8vw));
-        transform-origin: center;
+        width: auto;
+        transform-origin: center center;
         /* Scale down if content is too wide */
-        transform: scale(min(1, calc(92vw / (6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap))))));
+        transform: scale(min(1, calc(95vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        margin: 0 auto;
+        white-space: nowrap; /* Prevent wrapping */
+        display: inline-flex; /* Better control over layout */
+      }
+      
+      .digit {
+        overflow: visible; /* Ensure digits are fully visible */
       }
     }
     
     /* Extreme failsafe for any remaining edge cases */
-    @media (max-width: 320px) {
+    @media (max-width: 480px) {
+      .flip-clock-container {
+        padding: 0 5px;
+        min-height: calc(var(--digit-height) + 30px);
+      }
+      
       .flip-clock {
         /* Force scale down if still doesn't fit */
-        transform: scale(min(1, calc(88vw / (6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap))))));
+        transform: scale(min(1, calc(92vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        margin: 0 auto;
+        transform-origin: center center;
+      }
+      
+      /* Adjust digit sizes for better visibility */
+      :root {
+        --digit-width: 60px;
+        --digit-height: 85px;
+        --digit-font-size: 55px;
+        --colon-size: 45px;
+        --gap: 5px;
+        --border-radius: 10px;
+      }
+      
+      /* Ensure digits are fully visible */
+      .digit {
+        overflow: visible;
+      }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 320px) {
+      .flip-clock-container {
+        padding: 0 2px;
+        min-height: calc(var(--digit-height) + 20px);
+      }
+      
+      .flip-clock {
+        transform: scale(min(1, calc(98vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        transform-origin: center center;
+      }
+      
+      :root {
+        --digit-width: 45px;
+        --digit-height: 65px;
+        --digit-font-size: 40px;
+        --colon-size: 30px;
+        --gap: 2px;
+        --border-radius: 8px;
+      }
+      
+      .digit {
+        overflow: visible;
+        border-radius: var(--border-radius);
+      }
+      
+      /* Ensure digits are fully contained */
+      .digit .top span, .digit .bottom span, .digit .flip span {
+        font-size: calc(var(--digit-font-size) - 2px);
       }
     }
     
@@ -611,8 +704,10 @@
     <button id="startCountdown" style="display:none;">Start</button>
     <button id="fullscreenBtn">Fullscreen</button>
   </div>
-  <div class="flip-clock" id="flipClock">
-    <!-- Digits will be rendered here -->
+  <div class="flip-clock-container">
+    <div class="flip-clock" id="flipClock">
+      <!-- Digits will be rendered here -->
+    </div>
   </div>
   <div id="countdownCalculator" class="hideable-calculator">
     Effective time today: <span id="effectiveTime">00:00:00</span>
@@ -627,7 +722,6 @@
       </div>
     </div>
   </div>
-
   <script>
     // Matrix rain effect
     const canvas = document.getElementById('matrix');
@@ -722,11 +816,9 @@
     
     // Start matrix animation
     animateMatrix(0);
-
     function pad(num) {
       return num.toString().padStart(2, '0');
     }
-
     function renderDigit(container, value, prevValue) {
       container.innerHTML = '';
       const top = document.createElement('div');
@@ -743,7 +835,6 @@
       
       container.appendChild(top);
       container.appendChild(bottom);
-
       if (prevValue !== undefined && prevValue !== value) {
         const flip = document.createElement('div');
         flip.className = 'flip';
@@ -751,7 +842,6 @@
         flipSpan.textContent = prevValue;
         flip.appendChild(flipSpan);
         container.appendChild(flip);
-
         flip.addEventListener('animationend', () => {
           flip.remove();
         });
@@ -764,13 +854,11 @@
         }, 600);
       }
     }
-
     const flipClock = document.getElementById('flipClock');
     let mode = 'clock';
     let countdown = 60;
     let countdownInterval = null;
     let prevDigits = [null, null, null, null, null, null];
-
     function renderClock(h, m, s) {
       const timeStr = pad(h) + pad(m) + pad(s);
       flipClock.innerHTML = '';
@@ -788,7 +876,6 @@
         }
       }
     }
-
     function showClock() {
       mode = 'clock';
       document.getElementById('countdownInputs').style.display = 'none';
@@ -804,21 +891,27 @@
       window.clockDisplayInterval = setInterval(update, 1000);
       showControlsTemporarily();
     }
-
     function showCountdown() {
       mode = 'countdown';
       document.getElementById('countdownInputs').style.display = '';
       document.getElementById('startCountdown').style.display = '';
       // Stop clock display interval if running
       if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
-      // Resume countdown display (do not reset timer)
-      let h = Math.floor(countdown / 3600);
-      let m = Math.floor((countdown % 3600) / 60);
-      let s = countdown % 60;
-      renderClock(h, m, s);
+      // If countdown is not running, show the input values
+      if (!countdownInterval) {
+        let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
+        let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
+        let s = parseInt(document.getElementById('countdownSecond').value, 10) || 0;
+        renderClock(h, m, s);
+      } else {
+        // Resume countdown display (do not reset timer)
+        let h = Math.floor(countdown / 3600);
+        let m = Math.floor((countdown % 3600) / 60);
+        let s = countdown % 60;
+        renderClock(h, m, s);
+      }
       showControlsTemporarily();
     }
-
     // Effective countdown calculator
     let effectiveCountdownSeconds = 0;
     let lastCountdownDuration = 0;
@@ -907,7 +1000,38 @@
         }
       }
     }
-
+    // Create audio context for soft notification sound
+    let audioContext = null;
+    
+    function createSoftNotificationSound() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create a gentle notification sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Soft, pleasant frequency
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.3);
+        
+        // Gentle volume envelope
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+        
+        oscillator.type = 'sine';
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.8);
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
     function startCountdown() {
       let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
       let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
@@ -924,9 +1048,17 @@
           countdownInterval = null;
           if (mode === 'countdown') renderClock(0, 0, 0);
           
-          // Instead of popup, set pending effective time
+          // Set pending effective time
           pendingEffectiveTime = lastCountdownDuration;
           updatePendingTimeDisplay();
+          
+          // Show controls and make Add button flash
+          showControlsTemporarily();
+          const addTimeSection = document.getElementById('addEffectiveTime');
+          addTimeSection.classList.remove('hide');
+          
+          // Play soft notification sound
+          createSoftNotificationSound();
           
           return;
         }
@@ -939,7 +1071,6 @@
       update();
       countdownInterval = setInterval(update, 1000);
     }
-
     // Event listeners with improved mobile handling
     document.getElementById('clockMode').addEventListener('click', showClock);
     document.getElementById('countdownMode').addEventListener('click', showCountdown);
@@ -948,7 +1079,6 @@
     // Add effective time controls
     document.getElementById('addTimeBtn').addEventListener('click', addPendingTime);
     document.getElementById('clearTimeBtn').addEventListener('click', clearPendingTime);
-
     // Fullscreen handling with better mobile support
     document.getElementById('fullscreenBtn').addEventListener('click', () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
@@ -974,7 +1104,6 @@
         }
       }
     });
-
     function showControlsTemporarily() {
       const controls = document.querySelector('.controls');
       const calculator = document.querySelector('#countdownCalculator');
@@ -991,7 +1120,6 @@
         addTime.classList.add('hide');
       }, 5000);
     }
-
     // Improved event listeners for better mobile support
     document.addEventListener('mousemove', showControlsTemporarily);
     document.addEventListener('click', showControlsTemporarily);
@@ -1000,7 +1128,6 @@
     // Show controls on touch for mobile with better handling
     document.addEventListener('touchstart', showControlsTemporarily, { passive: true });
     document.addEventListener('touchend', showControlsTemporarily, { passive: true });
-
     // Prevent iOS zoom on double tap for specific elements
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function(event) {
@@ -1010,7 +1137,6 @@
       }
       lastTouchEnd = now;
     }, false);
-
     // Handle visibility change (when tab becomes inactive/active)
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden && mode === 'clock') {
@@ -1019,25 +1145,19 @@
         renderClock(now.getHours(), now.getMinutes(), now.getSeconds());
       }
     });
-
     // Initialize
-    // Set default countdown to 30 minutes and start in countdown mode
-    document.getElementById('countdownHour').value = 0;
-    document.getElementById('countdownMinute').value = 30;
-    document.getElementById('countdownSecond').value = 0;
-    
-    // Initialize display
-    showCountdown();
-    updateEffectiveTimeDisplay();
-    updatePendingTimeDisplay();
-    
-    // Ensure proper initialization after DOM is fully loaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        updateEffectiveTimeDisplay();
-        updatePendingTimeDisplay();
-      });
-    }
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default countdown to 30 minutes and start in countdown mode
+      document.getElementById('countdownHour').value = 0;
+      document.getElementById('countdownMinute').value = 30;
+      document.getElementById('countdownSecond').value = 0;
+      
+      // Initialize display
+      showCountdown();
+      updateEffectiveTimeDisplay();
+      updatePendingTimeDisplay();
+    });
   </script>
 </body>
 </html>
