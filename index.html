@@ -536,37 +536,46 @@
       }
     }
     
-    /* Mobile-specific adjustments */
+    /* Mobile-specific adjustments - ensure single line */
     @media (max-width: 480px) {
       body {
-        padding: 5px;
+        padding: 2px;
       }
       
       .flip-clock {
-        gap: calc(var(--gap) / 2);
+        padding: 0 2vw;
+        /* Force even tighter spacing if needed */
+        gap: max(var(--min-gap), var(--gap));
       }
       
       .controls {
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: 8px;
+        margin-bottom: 8px;
       }
       
       .countdown-inputs {
         justify-content: center;
         width: 100%;
-        margin-top: 5px;
+        margin-top: 3px;
       }
     }
     
-    /* Very small screens */
+    /* Emergency single-line enforcement for all screens */
+    @media (max-width: 600px) {
+      .flip-clock {
+        /* Calculate exact width needed and scale if necessary */
+        width: min(100%, calc(6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap)) + 8vw));
+        transform-origin: center;
+        /* Scale down if content is too wide */
+        transform: scale(min(1, calc(92vw / (6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap))))));
+      }
+    }
+    
+    /* Extreme failsafe for any remaining edge cases */
     @media (max-width: 320px) {
-      :root {
-        --digit-width: 50px;
-        --digit-height: 70px;
-        --digit-font-size: 45px;
-        --colon-size: 40px;
-        --gap: 5px;
-        --border-radius: 8px;
+      .flip-clock {
+        /* Force scale down if still doesn't fit */
+        transform: scale(min(1, calc(88vw / (6 * max(var(--min-digit-width), var(--digit-width)) + 2 * max(var(--colon-width), 0.3em) + 7 * max(var(--min-gap), var(--gap))))));
       }
     }
     
