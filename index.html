@@ -818,10 +818,10 @@
       <span>:</span>
       <input type="number" id="countdownSecond" min="0" max="59" value="0" />
     </span>
-    <button id="startCountdown" style="display:none;">Start</button>
+    <button id="fullscreenBtn">Fullscreen</button>
     <button id="tagsBtn">Goal</button>
     <button id="liveViewBtn">Turn on Live View</button>
-    <button id="fullscreenBtn">Fullscreen</button>
+    <button id="startCountdown" style="display:none;">Start</button>
   </div>
   <div class="flip-clock-container">
     <div class="flip-clock" id="flipClock">
@@ -1312,14 +1312,17 @@
       controls.classList.remove('hide');
       calculator.classList.remove('hide');
       addTime.classList.remove('hide');
-      // Never hide the goal (tag) display
+      // Only show goal if not in clock mode
+      if (window.timerTag && window.timerTag.trim() && mode !== 'clock') {
+        document.getElementById('timerTagDisplay').style.display = 'block';
+      }
       if (controls.hideTimeout) clearTimeout(controls.hideTimeout);
       controls.hideTimeout = setTimeout(() => {
         controls.classList.add('hide');
         calculator.classList.add('hide');
         addTime.classList.add('hide');
-        // Goal display is never hidden
-        document.getElementById('timerTagDisplay').style.display = (window.timerTag && window.timerTag.trim()) ? 'block' : 'none';
+        // Only show goal if not in clock mode
+        document.getElementById('timerTagDisplay').style.display = (window.timerTag && window.timerTag.trim() && mode !== 'clock') ? 'block' : 'none';
       }, 5000);
     }
     // Improved event listeners for better mobile support
