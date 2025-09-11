@@ -736,6 +736,66 @@
         margin-top: 10px;
       }
     }
+    /* Goal Modal Dialog */
+    #goalModal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.45);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #goalModal > div {
+      background: rgba(0, 0, 0, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 0 24px #0ff8;
+      padding: 32px 24px 24px 24px;
+      min-width: 260px;
+      max-width: 90vw;
+      text-align: center;
+    }
+    
+    #goalModal div > div {
+      color: #0ff;
+      font-size: 1.3em;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    
+    #goalInput {
+      width: 90%;
+      font-size: 1.1em;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #111;
+      color: #0ff;
+      margin-bottom: 18px;
+      outline: none;
+    }
+    
+    #goalModal button {
+      background: #0ff;
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    
+    #goalModal button#goalModalCancel {
+      background: #222;
+      color: #0ff;
+      border: 1px solid #0ff;
+    }
   </style>
 </head>
 <body>
@@ -780,6 +840,17 @@
       <div class="add-time-buttons">
         <button id="addTimeBtn" class="time-btn">Add</button>
         <button id="clearTimeBtn" class="time-btn">Clear</button>
+      </div>
+    </div>
+  </div>
+  <!-- Goal Modal Dialog -->
+  <div id="goalModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; z-index:2000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:rgba(0,0,0,0.95); border-radius:16px; box-shadow:0 0 24px #0ff8; padding:32px 24px 24px 24px; min-width:260px; max-width:90vw; text-align:center;">
+      <div style="color:#0ff; font-size:1.3em; font-family:'Quicksand',Arial,sans-serif; font-weight:700; margin-bottom:18px;">Set Goal for this timer</div>
+      <input id="goalInput" type="text" maxlength="80" style="width:90%; font-size:1.1em; padding:8px; border-radius:8px; border:1px solid #0ff; background:#111; color:#0ff; margin-bottom:18px; outline:none;" />
+      <div style="margin-top:8px; display:flex; gap:12px; justify-content:center;">
+        <button id="goalModalOk" style="background:#0ff; color:#000; font-weight:700; border:none; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">OK</button>
+        <button id="goalModalCancel" style="background:#222; color:#0ff; font-weight:700; border:1px solid #0ff; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">Cancel</button>
       </div>
     </div>
   </div>
@@ -1173,8 +1244,37 @@
       countdownInterval = setInterval(update, 1000);
     }
     // Event listeners with improved mobile handling
-    document.getElementById('clockMode').addEventListener('click', showClock);
-    document.getElementById('countdownMode').addEventListener('click', showCountdown);
+    document.getElementById('clockMode').addEventListener('click', function() {
+      // Hide live view window
+      const liveViewContainer = document.getElementById('liveViewContainer');
+      if (liveViewContainer) {
+        // Remember if it was active
+        window.liveViewWasActive = liveViewContainer.classList.contains('active');
+        liveViewContainer.classList.remove('active');
+        // Stop camera stream if running
+        if (window.liveViewStream) {
+          window.liveViewStream.getTracks().forEach(track => track.stop());
+          window.liveViewStream = null;
+          document.getElementById('liveViewVideo').srcObject = null;
+        }
+      }
+      // Hide goal display
+      const timerTagDisplay = document.getElementById('timerTagDisplay');
+      if (timerTagDisplay) timerTagDisplay.style.display = 'none';
+      showClock();
+    });
+    document.getElementById('countdownMode').addEventListener('click', function() {
+      showCountdown();
+      // Restore Goal if set
+      if (window.timerTag && window.timerTag.trim()) {
+        document.getElementById('timerTagDisplay').style.display = 'block';
+      }
+      // Restore live view window if it was active before clock mode
+      if (window.liveViewWasActive) {
+        document.getElementById('liveViewContainer').classList.add('active');
+        window.liveViewWasActive = false;
+      }
+    });
     document.getElementById('startCountdown').addEventListener('click', startCountdown);
     
     // Add effective time controls
@@ -1264,21 +1364,40 @@
     const tagsBtn = document.getElementById('tagsBtn');
     const timerTagDisplay = document.getElementById('timerTagDisplay');
     const timerTagText = document.getElementById('timerTagText');
-  let timerTag = '';
-  window.timerTag = timerTag;
+    let timerTag = '';
+    window.timerTag = timerTag;
 
+    // Custom modal for Goal
+    const goalModal = document.getElementById('goalModal');
+    const goalInput = document.getElementById('goalInput');
+    const goalModalOk = document.getElementById('goalModalOk');
+    const goalModalCancel = document.getElementById('goalModalCancel');
     tagsBtn.addEventListener('click', () => {
-      const tag = prompt('Enter your Goal for this timer:', timerTag || '');
-      if (tag !== null) {
-        timerTag = tag.trim();
-        window.timerTag = timerTag;
-        if (timerTag) {
-          timerTagText.textContent = timerTag;
-          timerTagDisplay.style.display = 'block';
-        } else {
-          timerTagText.textContent = '';
-          timerTagDisplay.style.display = 'none';
-        }
+      goalInput.value = timerTag || '';
+      goalModal.style.display = 'flex';
+      setTimeout(() => goalInput.focus(), 100);
+    });
+    goalModalOk.addEventListener('click', () => {
+      const tag = goalInput.value;
+      timerTag = tag.trim();
+      window.timerTag = timerTag;
+      if (timerTag) {
+        timerTagText.textContent = timerTag;
+        timerTagDisplay.style.display = 'block';
+      } else {
+        timerTagText.textContent = '';
+        timerTagDisplay.style.display = 'none';
+      }
+      goalModal.style.display = 'none';
+    });
+    goalModalCancel.addEventListener('click', () => {
+      goalModal.style.display = 'none';
+    });
+    goalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        goalModalOk.click();
+      } else if (e.key === 'Escape') {
+        goalModalCancel.click();
       }
     });
   </script>
