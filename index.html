@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Matrix Flip Clock</title>
   <style>
     /* Live view camera preview styles */
@@ -1777,34 +1779,46 @@
     document.getElementById('clearTimeBtn').addEventListener('click', clearPendingTime);
     // Fullscreen handling with better mobile support and iOS fix
     document.getElementById('fullscreenBtn').addEventListener('click', () => {
-      // Check if we're on iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      // Check if we're on iOS - improved detection
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       
       if (isIOS) {
-        // iOS doesn't support true fullscreen API, so simulate fullscreen
+        // iOS doesn't support true fullscreen API, so use our custom implementation
         toggleIOSFullscreen();
       } else {
         // Standard fullscreen API for other browsers
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
           const elem = document.documentElement;
-          if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-          } else if (elem.webkitRequestFullscreen) { // Safari
-            elem.webkitRequestFullscreen();
-          } else if (elem.mozRequestFullScreen) { // Firefox
-            elem.mozRequestFullScreen();
-          } else if (elem.msRequestFullscreen) { // IE/Edge
-            elem.msRequestFullscreen();
+          try {
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { // Safari
+              elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+              elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+              elem.msRequestFullscreen();
+            } else {
+              // Fallback for browsers that don't support fullscreen API
+              toggleIOSFullscreen();
+            }
+          } catch (e) {
+            console.log('Fullscreen API failed, using fallback');
+            toggleIOSFullscreen();
           }
         } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) { // Safari
-            document.webkitExitFullscreen();
-          } else if (document.mozCancelFullScreen) { // Firefox
-            document.mozCancelFullScreen();
-          } else if (document.msExitFullscreen) { // IE/Edge
-            document.msExitFullscreen();
+          try {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { // Safari
+              document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+              document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+              document.msExitFullscreen();
+            }
+          } catch (e) {
+            console.log('Exit fullscreen failed');
           }
         }
       }
@@ -1814,31 +1828,65 @@
     let isIOSFullscreen = false;
     
     function toggleIOSFullscreen() {
+      // Check if running on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      
       if (!isIOSFullscreen) {
-        enterIOSFullscreen();
+        enterIOSFullscreen(isIOS);
       } else {
-        exitIOSFullscreen();
+        exitIOSFullscreen(isIOS);
       }
     }
     
-    function enterIOSFullscreen() {
+    function enterIOSFullscreen(isIOS) {
       const body = document.body;
       const controls = document.querySelector('.controls');
       const calculator = document.querySelector('#countdownCalculator');
       const addTime = document.querySelector('#addEffectiveTime');
       
-      // Hide address bar and create fullscreen-like experience
-      window.scrollTo(0, 1);
+      // iOS-specific fullscreen handling
+      if (isIOS) {
+        // Try to use the new iOS fullscreen API if available
+        if (document.documentElement.webkitRequestFullscreen) {
+          try {
+            document.documentElement.webkitRequestFullscreen();
+          } catch (e) {
+            console.log('iOS fullscreen API failed, using fallback');
+          }
+        }
+        
+        // Force to landscape if not already (better fullscreen experience on iOS)
+        if (window.orientation !== 90 && window.orientation !== -90) {
+          try {
+            if (screen.orientation && screen.orientation.lock) {
+              screen.orientation.lock('landscape').catch(e => console.log('Could not lock orientation:', e));
+            }
+          } catch (e) {
+            console.log('Orientation lock not supported');
+          }
+        }
+        
+        // Hide Safari UI by scrolling slightly
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+        }, 300);
+      }
       
       // Add iOS fullscreen styles
       body.style.position = 'fixed';
       body.style.top = '0';
       body.style.left = '0';
       body.style.width = '100%';
-      body.style.height = '100vh';
+      body.style.height = '100%'; // Use 100% instead of 100vh for better iOS compatibility
       body.style.overflow = 'hidden';
       body.style.webkitUserSelect = 'none';
       body.style.webkitTouchCallout = 'none';
+      
+      // Add safe area insets for notched iOS devices
+      body.style.paddingTop = 'env(safe-area-inset-top)';
+      body.style.paddingBottom = 'env(safe-area-inset-bottom)';
+      body.style.paddingLeft = 'env(safe-area-inset-left)';
+      body.style.paddingRight = 'env(safe-area-inset-right)';
       
       // Hide controls initially in fullscreen
       if (controls) controls.classList.add('hide');
@@ -1857,11 +1905,31 @@
       setTimeout(() => {
         adjustForMobile();
         window.dispatchEvent(new Event('resize'));
-      }, 100);
+      }, 300); // Longer timeout for iOS
     }
     
-    function exitIOSFullscreen() {
+    function exitIOSFullscreen(isIOS) {
       const body = document.body;
+      
+      // iOS-specific exit fullscreen
+      if (isIOS) {
+        if (document.webkitExitFullscreen) {
+          try {
+            document.webkitExitFullscreen();
+          } catch (e) {
+            console.log('iOS exit fullscreen API failed');
+          }
+        }
+        
+        // Release orientation lock if possible
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (e) {
+          console.log('Orientation unlock not supported');
+        }
+      }
       
       // Remove iOS fullscreen styles
       body.style.position = '';
@@ -1872,6 +1940,10 @@
       body.style.overflow = '';
       body.style.webkitUserSelect = '';
       body.style.webkitTouchCallout = '';
+      body.style.paddingTop = '';
+      body.style.paddingBottom = '';
+      body.style.paddingLeft = '';
+      body.style.paddingRight = '';
       
       // Remove fullscreen class
       body.classList.remove('ios-fullscreen');
@@ -1888,7 +1960,7 @@
       setTimeout(() => {
         adjustForMobile();
         window.dispatchEvent(new Event('resize'));
-      }, 100);
+      }, 300); // Longer timeout for iOS
     }
     
     // Handle orientation change in iOS fullscreen
