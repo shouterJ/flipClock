@@ -721,19 +721,52 @@
       }
     }
     
-    /* Landscape mobile */
+    /* Landscape mobile - maximize space utilization */
     @media (max-height: 500px) and (orientation: landscape) {
       body {
         justify-content: flex-start;
-        padding-top: 10px;
+        padding: 2px;
+      }
+      
+      .flip-clock-container {
+        padding: 2px 1px;
+        min-height: calc(var(--digit-height) + 10px);
+        width: 100%;
+      }
+      
+      .flip-clock {
+        margin: 0;
+        width: 100%;
+        justify-content: center;
       }
       
       .controls {
-        margin-bottom: 10px;
+        margin-bottom: 3px;
+        padding: 4px 6px;
       }
       
       .hideable-calculator {
-        margin-top: 10px;
+        margin-top: 3px;
+        font-size: clamp(12px, 3vw, 18px);
+      }
+      
+      .hideable-add-time {
+        margin-top: 3px;
+      }
+      
+      /* Maximize button sizes for landscape */
+      button {
+        padding: clamp(4px, 1.5vw, 8px) clamp(8px, 2.5vw, 16px);
+        font-size: clamp(12px, 2.5vw, 18px);
+      }
+      
+      /* Ensure digits utilize maximum space */
+      .digit {
+        overflow: visible;
+      }
+      
+      .digit .top span, .digit .bottom span, .digit .flip span {
+        overflow: visible;
       }
     }
     /* Goal Modal Dialog */
@@ -922,12 +955,12 @@
     
     resizeCanvas();
     
-    // Throttled resize handler for better performance on mobile
-    let resizeTimeout;
+    // Enhanced resize handler for better performance on mobile
+    let matrixResizeTimeout;
     window.addEventListener('resize', function() {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(resizeCanvas, 150);
-      // Hide live view on load
+      clearTimeout(matrixResizeTimeout);
+      matrixResizeTimeout = setTimeout(resizeCanvas, 150);
+      // Hide live view on resize
       liveViewContainer.classList.remove('active');
     });
     
@@ -1026,6 +1059,161 @@
         }, 600);
       }
     }
+    // Mobile detection and dynamic sizing for landscape orientation
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (window.innerWidth <= 768) ||
+             ('ontouchstart' in window);
+    }
+    
+    function isLandscapeMobile() {
+      return isMobileDevice() && 
+             (window.innerWidth > window.innerHeight) && 
+             (window.innerHeight <= 500);
+    }
+    
+    function calculateOptimalSizes() {
+      const isMobile = isMobileDevice();
+      const isLandscape = isLandscapeMobile();
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      
+      if (!isMobile) {
+        return null; // Use CSS variables for desktop
+      }
+      
+      // More aggressive screen utilization - use more of the available space
+      const availableWidth = screenWidth * 0.98; // Use 98% of screen width
+      const availableHeight = isLandscape ? screenHeight * 0.75 : screenHeight * 0.5; // Use more height
+      const totalElements = 8; // 6 digits + 2 colons
+      
+      let digitWidth, digitHeight, fontSize, colonSize, gap;
+      
+      if (isLandscape) {
+        // Landscape mobile - maximize size while maintaining fit
+        const maxElementWidth = availableWidth / totalElements;
+        const maxDigitHeight = availableHeight * 0.9; // Use 90% of available height
+        
+        // Start with width-constrained size, then check height
+        digitWidth = Math.max(50, maxElementWidth * 0.85); // More aggressive width usage
+        digitHeight = Math.min(maxDigitHeight, digitWidth * 1.8); // Taller ratio for landscape
+        
+        // If height allows, make digits even larger
+        if (digitHeight < maxDigitHeight * 0.8) {
+          const heightBasedWidth = maxDigitHeight / 1.8;
+          if (heightBasedWidth * totalElements <= availableWidth) {
+            digitWidth = Math.min(heightBasedWidth, digitWidth * 1.3);
+            digitHeight = digitWidth * 1.8;
+          }
+        }
+        
+        fontSize = digitHeight * 0.65; // Larger font relative to digit size
+        colonSize = fontSize * 0.75;
+        gap = Math.max(2, digitWidth * 0.06); // Slightly more gap for larger digits
+        
+      } else {
+        // Portrait mobile - also maximize usage
+        const maxElementWidth = availableWidth / totalElements;
+        const maxDigitHeight = availableHeight * 0.85;
+        
+        digitWidth = Math.max(60, maxElementWidth * 0.9); // More width usage
+        digitHeight = Math.min(maxDigitHeight, digitWidth * 1.4);
+        
+        // If height allows, make digits larger
+        if (digitHeight < maxDigitHeight * 0.8) {
+          const heightBasedWidth = maxDigitHeight / 1.4;
+          if (heightBasedWidth * totalElements <= availableWidth) {
+            digitWidth = Math.min(heightBasedWidth, digitWidth * 1.2);
+            digitHeight = digitWidth * 1.4;
+          }
+        }
+        
+        fontSize = digitHeight * 0.6;
+        colonSize = fontSize * 0.8;
+        gap = Math.max(3, digitWidth * 0.08);
+      }
+      
+      return {
+        digitWidth: Math.floor(digitWidth),
+        digitHeight: Math.floor(digitHeight),
+        fontSize: Math.floor(fontSize),
+        colonSize: Math.floor(colonSize),
+        gap: Math.floor(gap),
+        borderRadius: Math.max(8, Math.floor(digitWidth * 0.12))
+      };
+    }
+    
+    function applySizes(sizes) {
+      if (!sizes) return;
+      
+      const root = document.documentElement;
+      root.style.setProperty('--digit-width', sizes.digitWidth + 'px');
+      root.style.setProperty('--digit-height', sizes.digitHeight + 'px');
+      root.style.setProperty('--digit-font-size', sizes.fontSize + 'px');
+      root.style.setProperty('--colon-size', sizes.colonSize + 'px');
+      root.style.setProperty('--gap', sizes.gap + 'px');
+      root.style.setProperty('--border-radius', sizes.borderRadius + 'px');
+    }
+    
+    function adjustForMobile() {
+      const sizes = calculateOptimalSizes();
+      applySizes(sizes);
+      
+      // Additional adjustments for mobile devices
+      if (isMobileDevice()) {
+        const flipClockContainer = document.querySelector('.flip-clock-container');
+        const flipClock = document.querySelector('.flip-clock');
+        
+        if (flipClockContainer && flipClock) {
+          if (isLandscapeMobile()) {
+            // Minimize padding for landscape to maximize space
+            flipClockContainer.style.padding = '2px 1px';
+            flipClock.style.margin = '0 auto';
+          } else {
+            // Normal padding for portrait
+            flipClockContainer.style.padding = '10px 5px';
+          }
+          
+          // Ensure proper fit with more aggressive scaling if needed
+          setTimeout(() => {
+            const clockWidth = flipClock.scrollWidth;
+            const containerWidth = flipClockContainer.clientWidth - 5; // Minimal margins
+            
+            if (clockWidth > containerWidth) {
+              // More aggressive scaling - use up to 99% of container width
+              const scale = Math.min(containerWidth / clockWidth, 0.99);
+              flipClock.style.transform = `scale(${scale})`;
+              flipClock.style.transformOrigin = 'center center';
+            } else {
+              // If it fits, try to scale UP slightly for better utilization
+              const maxScale = containerWidth / clockWidth;
+              if (maxScale > 1.1 && maxScale < 1.3) {
+                flipClock.style.transform = `scale(${Math.min(maxScale * 0.95, 1.25)})`;
+                flipClock.style.transformOrigin = 'center center';
+              } else {
+                flipClock.style.transform = 'none';
+              }
+            }
+          }, 100);
+        }
+      }
+    }
+    
+    // Enhanced resize and orientation handlers
+    let resizeTimer;
+    function handleResize() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        adjustForMobile();
+      }, 150);
+    }
+    
+    function handleOrientationChange() {
+      setTimeout(() => {
+        adjustForMobile();
+      }, 300);
+    }
+
     const flipClock = document.getElementById('flipClock');
     let mode = 'clock';
     let countdown = 60;
@@ -1045,6 +1233,41 @@
           colon.className = 'colon';
           colon.textContent = ':';
           flipClock.appendChild(colon);
+        }
+      }
+      
+      // Mobile fit check after rendering
+      if (isMobileDevice()) {
+        setTimeout(() => {
+          ensureMobileFit();
+        }, 50);
+      }
+    }
+    
+    function ensureMobileFit() {
+      const flipClock = document.querySelector('.flip-clock');
+      const container = document.querySelector('.flip-clock-container');
+      
+      if (!flipClock || !container) return;
+      
+      const clockWidth = flipClock.scrollWidth;
+      const containerWidth = container.clientWidth - 10; // Minimal margin
+      
+      if (clockWidth > containerWidth) {
+        // Scale down if too big
+        const scale = Math.min(containerWidth / clockWidth, 0.98);
+        flipClock.style.transform = `scale(${scale})`;
+        flipClock.style.transformOrigin = 'center center';
+      } else {
+        // If it fits comfortably, try to scale up for better utilization
+        const utilizationRatio = clockWidth / containerWidth;
+        if (utilizationRatio < 0.8) { // If using less than 80% of space
+          const maxScale = containerWidth / clockWidth;
+          const optimalScale = Math.min(maxScale * 0.95, 1.2); // Cap at 20% increase
+          if (optimalScale > 1.05) { // Only scale up if meaningful increase
+            flipClock.style.transform = `scale(${optimalScale})`;
+            flipClock.style.transformOrigin = 'center center';
+          }
         }
       }
     }
@@ -1358,10 +1581,17 @@
       document.getElementById('countdownMinute').value = 30;
       document.getElementById('countdownSecond').value = 0;
       
+      // Apply mobile adjustments first
+      adjustForMobile();
+      
       // Initialize display
       showCountdown();
       updateEffectiveTimeDisplay();
       updatePendingTimeDisplay();
+      
+      // Add resize and orientation listeners
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleOrientationChange);
     });
     // Tag functionality
     const tagsBtn = document.getElementById('tagsBtn');
