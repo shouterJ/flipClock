@@ -197,6 +197,8 @@
       width: 100%;
       display: flex;
       justify-content: center;
+      align-items: center;
+      flex-grow: 1;
       overflow: visible;
       padding: 20px 0;
       box-sizing: border-box;
@@ -220,7 +222,7 @@
       position: relative;
       width: var(--digit-width);
       height: var(--digit-height);
-      background: linear-gradient(135deg, rgba(26, 26, 26, 0.5) 0%, rgba(42, 42, 42, 0.5) 100%);
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(42, 42, 42, 0.3) 100%);
       border-radius: var(--border-radius);
       box-shadow: 0 8px 24px rgba(0, 255, 0, 0.1), 
                   0 0 40px rgba(0, 255, 0, 0.05),
@@ -249,7 +251,7 @@
       width: 100%;
       height: 50%;
       overflow: visible;
-      background: linear-gradient(135deg, rgba(26, 26, 26, 0.5) 0%, rgba(42, 42, 42, 0.5) 100%);
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(42, 42, 42, 0.3) 100%);
       z-index: 1;
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
@@ -275,7 +277,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: calc(var(--digit-font-size) * 0.65);
+      font-size: calc(var(--digit-font-size) * 0.95);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
@@ -301,7 +303,7 @@
       top: 0;
       width: 100%;
       height: 50%;
-      background: linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(26, 26, 26, 0.5) 100%);
+      background: linear-gradient(135deg, rgba(10, 10, 10, 0.3) 0%, rgba(26, 26, 26, 0.3) 100%);
       color: #0ff;
       overflow: visible;
       -webkit-transform-origin: bottom;
@@ -322,7 +324,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: calc(var(--digit-font-size) * 0.65);
+      font-size: calc(var(--digit-font-size) * 0.95);
       font-family: 'Quicksand', Arial, sans-serif;
       font-weight: 700;
       color: #0ff;
@@ -368,6 +370,159 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
+    }
+    
+    /* Cyberpunk flickering fluorescent tube effects */
+    @keyframes fluorescentFlicker {
+      0% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+        filter: brightness(1);
+      }
+      2% { 
+        opacity: 0.4;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.3), 0 0 5px rgba(0, 255, 255, 0.1);
+        filter: brightness(0.7);
+      }
+      3% { 
+        opacity: 1;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8), 0 0 15px rgba(0, 255, 255, 0.4), 0 0 20px rgba(0, 255, 255, 0.2);
+        filter: brightness(1.2);
+      }
+      5% { 
+        opacity: 0.2;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.5);
+      }
+      6% { 
+        opacity: 0.9;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.3);
+        filter: brightness(1.1);
+      }
+      8% { 
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.6);
+      }
+      9% { 
+        opacity: 1;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.9), 0 0 20px rgba(0, 255, 255, 0.5), 0 0 30px rgba(0, 255, 255, 0.2);
+        filter: brightness(1.3);
+      }
+      12% { 
+        opacity: 0.1;
+        text-shadow: none;
+        filter: brightness(0.3);
+      }
+      13% { 
+        opacity: 0.8;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+      15%, 100% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+    }
+    
+    @keyframes fluorescentBuzz {
+      0% { 
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        transform: translateY(0);
+      }
+      10% { 
+        text-shadow: 0 0 3px rgba(0, 255, 255, 0.4), 0 0 6px rgba(0, 255, 255, 0.2);
+        transform: translateY(-0.5px);
+      }
+      20% { 
+        text-shadow: 0 0 7px rgba(0, 255, 255, 0.8), 0 0 14px rgba(0, 255, 255, 0.4);
+        transform: translateY(0.5px);
+      }
+      30% { 
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.3), 0 0 4px rgba(0, 255, 255, 0.1);
+        transform: translateY(-0.3px);
+      }
+      40% { 
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.3);
+        transform: translateY(0.3px);
+      }
+      50% { 
+        text-shadow: 0 0 4px rgba(0, 255, 255, 0.5), 0 0 8px rgba(0, 255, 255, 0.2);
+        transform: translateY(0);
+      }
+      100% { 
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fluorescentStartup {
+      0% { 
+        opacity: 0;
+        text-shadow: none;
+        filter: brightness(0);
+      }
+      5% { 
+        opacity: 0.2;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.3);
+      }
+      8% { 
+        opacity: 0;
+        text-shadow: none;
+        filter: brightness(0);
+      }
+      12% { 
+        opacity: 0.5;
+        text-shadow: 0 0 3px rgba(0, 255, 255, 0.4);
+        filter: brightness(0.6);
+      }
+      15% { 
+        opacity: 0.1;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.1);
+        filter: brightness(0.2);
+      }
+      20% { 
+        opacity: 0.8;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(0.9);
+      }
+      25% { 
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.4);
+      }
+      30%, 100% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+    }
+    
+    /* Fluorescent tube effect classes */
+    .digit.fluorescent-flicker {
+      animation: fluorescentFlicker 1s ease-in-out;
+    }
+    
+    .digit.fluorescent-buzz {
+      animation: fluorescentBuzz 0.8s ease-in-out;
+    }
+    
+    .digit.fluorescent-startup {
+      animation: fluorescentStartup 1.2s ease-in-out;
+    }
+    
+    .digit.fluorescent-flicker span {
+      animation: fluorescentFlicker 1s ease-in-out;
+    }
+    
+    .digit.fluorescent-buzz span {
+      animation: fluorescentBuzz 0.8s ease-in-out;
+    }
+    
+    .digit.fluorescent-startup span {
+      animation: fluorescentStartup 1.2s ease-in-out;
     }
     
     button {
@@ -724,7 +879,7 @@
     /* Landscape mobile - maximize space utilization */
     @media (max-height: 500px) and (orientation: landscape) {
       body {
-        justify-content: flex-start;
+        justify-content: center;
         padding: 2px;
       }
       
@@ -732,6 +887,8 @@
         padding: 2px 1px;
         min-height: calc(var(--digit-height) + 10px);
         width: 100%;
+        align-items: center;
+        flex-grow: 1;
       }
       
       .flip-clock {
@@ -768,6 +925,53 @@
       .digit .top span, .digit .bottom span, .digit .flip span {
         overflow: visible;
       }
+    }
+    
+    /* iOS Fullscreen mode styles */
+    .ios-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+      -webkit-user-select: none !important;
+      -webkit-touch-callout: none !important;
+      z-index: 9999;
+    }
+    
+    .ios-fullscreen .flip-clock-container {
+      padding: 5px 2px;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+    }
+    
+    .ios-fullscreen .controls,
+    .ios-fullscreen .hideable-calculator,
+    .ios-fullscreen .hideable-add-time {
+      position: absolute;
+      z-index: 10000;
+    }
+    
+    .ios-fullscreen .controls {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .ios-fullscreen .hideable-calculator {
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .ios-fullscreen .hideable-add-time {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
     }
     /* Goal Modal Dialog */
     #goalModal {
@@ -1040,6 +1244,7 @@
       
       container.appendChild(top);
       container.appendChild(bottom);
+      
       if (prevValue !== undefined && prevValue !== value) {
         const flip = document.createElement('div');
         flip.className = 'flip';
@@ -1047,6 +1252,7 @@
         flipSpan.textContent = prevValue;
         flip.appendChild(flipSpan);
         container.appendChild(flip);
+        
         flip.addEventListener('animationend', () => {
           flip.remove();
         });
@@ -1059,6 +1265,72 @@
         }, 600);
       }
     }
+    // Cyberpunk fluorescent tube flickering effects
+    function triggerRandomGlitch() {
+      const digits = document.querySelectorAll('.digit');
+      if (digits.length === 0) return;
+      
+      // Randomly select 1-2 digits to flicker like fluorescent tubes
+      const flickerCount = Math.random() < 0.8 ? 1 : 2;
+      const selectedDigits = [];
+      
+      for (let i = 0; i < flickerCount; i++) {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * digits.length);
+        } while (selectedDigits.includes(randomIndex));
+        
+        selectedDigits.push(randomIndex);
+        const digit = digits[randomIndex];
+        
+        // Remove any existing fluorescent classes
+        digit.classList.remove('fluorescent-flicker', 'fluorescent-buzz', 'fluorescent-startup');
+        
+        // Randomly choose fluorescent tube effect type
+        const fluorescentTypes = ['fluorescent-flicker', 'fluorescent-buzz', 'fluorescent-startup'];
+        const weights = [0.5, 0.3, 0.2]; // Flicker most common, startup least common
+        
+        let randomValue = Math.random();
+        let selectedEffect;
+        
+        if (randomValue < weights[0]) {
+          selectedEffect = fluorescentTypes[0]; // flicker
+        } else if (randomValue < weights[0] + weights[1]) {
+          selectedEffect = fluorescentTypes[1]; // buzz
+        } else {
+          selectedEffect = fluorescentTypes[2]; // startup
+        }
+        
+        // Apply fluorescent tube effect
+        digit.classList.add(selectedEffect);
+        
+        // Remove effect after animation completes
+        const duration = selectedEffect === 'fluorescent-startup' ? 1200 : 
+                        selectedEffect === 'fluorescent-flicker' ? 1000 : 800;
+        
+        setTimeout(() => {
+          digit.classList.remove(selectedEffect);
+        }, duration);
+      }
+    }
+    
+    // Start random fluorescent tube flickering
+    function startCyberpunkGlitches() {
+      // Trigger fluorescent flicker every 4-10 seconds randomly
+      function scheduleNextGlitch() {
+        const delay = Math.random() * 6000 + 4000; // 4-10 seconds
+        setTimeout(() => {
+          triggerRandomGlitch();
+          scheduleNextGlitch();
+        }, delay);
+      }
+      
+      // Initial delay before first flicker
+      setTimeout(() => {
+        scheduleNextGlitch();
+      }, 3000);
+    }
+
     // Mobile detection and dynamic sizing for landscape orientation
     function isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -1503,31 +1775,138 @@
     // Add effective time controls
     document.getElementById('addTimeBtn').addEventListener('click', addPendingTime);
     document.getElementById('clearTimeBtn').addEventListener('click', clearPendingTime);
-    // Fullscreen handling with better mobile support
+    // Fullscreen handling with better mobile support and iOS fix
     document.getElementById('fullscreenBtn').addEventListener('click', () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) { // Safari
-          elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) { // Firefox
-          elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) { // IE/Edge
-          elem.msRequestFullscreen();
-        }
+      // Check if we're on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // iOS doesn't support true fullscreen API, so simulate fullscreen
+        toggleIOSFullscreen();
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { // Safari
-          document.webkitExitFullscreen();
-        } else if (document.mozCancelFullScreen) { // Firefox
-          document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) { // IE/Edge
-          document.msExitFullscreen();
+        // Standard fullscreen API for other browsers
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+          const elem = document.documentElement;
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) { // Safari
+            elem.webkitRequestFullscreen();
+          } else if (elem.mozRequestFullScreen) { // Firefox
+            elem.mozRequestFullScreen();
+          } else if (elem.msRequestFullscreen) { // IE/Edge
+            elem.msRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) { // Safari
+            document.webkitExitFullscreen();
+          } else if (document.mozCancelFullScreen) { // Firefox
+            document.mozCancelFullScreen();
+          } else if (document.msExitFullscreen) { // IE/Edge
+            document.msExitFullscreen();
+          }
         }
       }
     });
+    
+    // iOS fullscreen simulation
+    let isIOSFullscreen = false;
+    
+    function toggleIOSFullscreen() {
+      if (!isIOSFullscreen) {
+        enterIOSFullscreen();
+      } else {
+        exitIOSFullscreen();
+      }
+    }
+    
+    function enterIOSFullscreen() {
+      const body = document.body;
+      const controls = document.querySelector('.controls');
+      const calculator = document.querySelector('#countdownCalculator');
+      const addTime = document.querySelector('#addEffectiveTime');
+      
+      // Hide address bar and create fullscreen-like experience
+      window.scrollTo(0, 1);
+      
+      // Add iOS fullscreen styles
+      body.style.position = 'fixed';
+      body.style.top = '0';
+      body.style.left = '0';
+      body.style.width = '100%';
+      body.style.height = '100vh';
+      body.style.overflow = 'hidden';
+      body.style.webkitUserSelect = 'none';
+      body.style.webkitTouchCallout = 'none';
+      
+      // Hide controls initially in fullscreen
+      if (controls) controls.classList.add('hide');
+      if (calculator) calculator.classList.add('hide');
+      if (addTime) addTime.classList.add('hide');
+      
+      // Add fullscreen class for additional styling
+      body.classList.add('ios-fullscreen');
+      
+      isIOSFullscreen = true;
+      
+      // Update button text
+      document.getElementById('fullscreenBtn').textContent = 'Exit Fullscreen';
+      
+      // Trigger resize to adjust clock size
+      setTimeout(() => {
+        adjustForMobile();
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
+    
+    function exitIOSFullscreen() {
+      const body = document.body;
+      
+      // Remove iOS fullscreen styles
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.width = '';
+      body.style.height = '';
+      body.style.overflow = '';
+      body.style.webkitUserSelect = '';
+      body.style.webkitTouchCallout = '';
+      
+      // Remove fullscreen class
+      body.classList.remove('ios-fullscreen');
+      
+      isIOSFullscreen = false;
+      
+      // Update button text
+      document.getElementById('fullscreenBtn').textContent = 'Fullscreen';
+      
+      // Show controls temporarily
+      showControlsTemporarily();
+      
+      // Trigger resize to readjust clock size
+      setTimeout(() => {
+        adjustForMobile();
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
+    
+    // Handle orientation change in iOS fullscreen
+    window.addEventListener('orientationchange', function() {
+      if (isIOSFullscreen) {
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          adjustForMobile();
+        }, 500);
+      }
+    });
+    
+    // Prevent scrolling in iOS fullscreen
+    document.addEventListener('touchmove', function(e) {
+      if (isIOSFullscreen) {
+        e.preventDefault();
+      }
+    }, { passive: false });
     function showControlsTemporarily() {
       const controls = document.querySelector('.controls');
       const calculator = document.querySelector('#countdownCalculator');
@@ -1592,6 +1971,9 @@
       // Add resize and orientation listeners
       window.addEventListener('resize', handleResize);
       window.addEventListener('orientationchange', handleOrientationChange);
+      
+      // Start cyberpunk glitch effects
+      startCyberpunkGlitches();
     });
     // Tag functionality
     const tagsBtn = document.getElementById('tagsBtn');
