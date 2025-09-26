@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Matrix Flip Clock</title>
+  <style>
+    /* Live view camera preview styles */
+    #liveViewContainer {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16.66vw;
+      height: 16.66vh;
+      min-width: 100px;
+      min-height: 60px;
+      max-width: 16.66vw;
+      max-height: 16.66vh;
+      z-index: 100;
+      display: none;
+      background: rgba(0,0,0,0.7);
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #0ff8, 0 0 12px #0ff4;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 8px;
+    }
+    #liveViewContainer.active {
+      display: flex;
+    }
+    #liveViewVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #000;
+    }
+    #closeLiveViewBtn {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      background: rgba(0,0,0,0.5);
+      color: #0ff;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 101;
+      padding: 2px 8px;
+      transition: background 0.2s;
+    }
+    #closeLiveViewBtn:hover {
+      background: rgba(0,255,255,0.2);
+    }
+/* Flash effect for effective time value */
+#effectiveTime.flash {
+  animation: flashEffective 1s linear 1;
+  text-shadow:
+    0 0 80px #fff,
+    0 0 160px #fff,
+    0 0 40px #0ff,
+    0 0 120px #0ff;
+}
+@keyframes flashEffective {
+  0% { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+  10% { text-shadow: 0 0 80px #fff, 0 0 160px #fff, 0 0 40px #0ff, 0 0 120px #0ff; }
+  90% { text-shadow: 0 0 80px #fff, 0 0 160px #fff, 0 0 40px #0ff, 0 0 120px #0ff; }
+  100% { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+}
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+    
+    :root {
+      --digit-width: 150px;
+      --digit-height: 200px;
+      --digit-font-size: 140px;
+      --colon-size: 120px;
+      --gap: 20px;
+      --border-radius: 28px;
+    }
+    
+    /* Mobile devices */
+    @media (max-width: 480px) {
+      :root {
+        --digit-width: 70px;
+        --digit-height: 95px;
+        --digit-font-size: 65px;
+        --colon-size: 55px;
+        --gap: 8px;
+        --border-radius: 12px;
+      }
+    }
+    
+    /* Small tablets */
+    @media (min-width: 481px) and (max-width: 768px) {
+      :root {
+        --digit-width: 100px;
+        --digit-height: 135px;
+        --digit-font-size: 90px;
+        --colon-size: 80px;
+        --gap: 12px;
+        --border-radius: 18px;
+      }
+    }
+    
+    /* Large tablets */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      :root {
+        --digit-width: 120px;
+        --digit-height: 160px;
+        --digit-font-size: 110px;
+        --colon-size: 95px;
+        --gap: 15px;
+        --border-radius: 22px;
+      }
+    }
+    
+    /* Large desktops and 4K */
+    @media (min-width: 1920px) {
+      :root {
+        --digit-width: 200px;
+        --digit-height: 270px;
+        --digit-font-size: 190px;
+        --colon-size: 160px;
+        --gap: 30px;
+        --border-radius: 35px;
+      }
+    }
+    
+    /* 4K and ultra-wide */
+    @media (min-width: 2560px) {
+      :root {
+        --digit-width: 280px;
+        --digit-height: 380px;
+        --digit-font-size: 270px;
+        --colon-size: 230px;
+        --gap: 40px;
+        --border-radius: 45px;
+      }
+    }
+    body {
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 10px;
+      font-family: 'Quicksand', Arial, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    
+    /* Matrix background */
+    #matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.3;
+    }
+    
+    .controls {
+      margin-bottom: clamp(15px, 3vw, 30px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(5px, 1vw, 10px);
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease;
+      position: relative;
+      z-index: 10;
+      -webkit-backdrop-filter: blur(5px);
+      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.5);
+      padding: clamp(8px, 2vw, 20px);
+      border-radius: clamp(6px, 1.5vw, 12px);
+      max-width: 95vw;
+    }
+    
+    .controls.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .flip-clock-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-grow: 1;
+      overflow: visible;
+      padding: 20px 0;
+      box-sizing: border-box;
+      min-height: calc(var(--digit-height) + 40px); /* Ensure enough vertical space */
+    }
+    
+    .flip-clock {
+      display: flex;
+      gap: var(--gap);
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      flex-wrap: nowrap; /* Prevent wrapping to multiple lines */
+      justify-content: center;
+      max-width: 95vw;
+      margin: 0 auto;
+      overflow: visible; /* Allow scaling to work properly */
+    }
+    
+    .digit {
+      position: relative;
+      width: var(--digit-width);
+      height: var(--digit-height);
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(42, 42, 42, 0.3) 100%);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 24px rgba(0, 255, 0, 0.1), 
+                  0 0 40px rgba(0, 255, 0, 0.05),
+                  inset 0 0 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--digit-font-size);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      color: #0ff;
+      margin: 0 clamp(1px, 0.3vw, 2px);
+      overflow: visible;
+      letter-spacing: 0;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      flex-shrink: 0;
+      -webkit-perspective: 1000px;
+      perspective: 1000px;
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+    }
+    
+    .digit .top, .digit .bottom {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      overflow: visible;
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(42, 42, 42, 0.3) 100%);
+      z-index: 1;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+    
+    .digit .top {
+      top: 0;
+      border-bottom: 2px solid rgba(0, 255, 0, 0.2);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .digit .bottom {
+      bottom: 0;
+      border-top: 2px solid rgba(0, 255, 0, 0.2);
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+    }
+    
+    .digit .top span, .digit .bottom span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: var(--digit-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--digit-font-size) * 0.95);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      color: #0ff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+    
+    .digit .top span {
+      top: 0;
+    }
+    
+    .digit .bottom span {
+      top: calc(var(--digit-height) / -2);
+    }
+    
+    .digit .flip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(135deg, rgba(10, 10, 10, 0.3) 0%, rgba(26, 26, 26, 0.3) 100%);
+      color: #0ff;
+      overflow: visible;
+      -webkit-transform-origin: bottom;
+      transform-origin: bottom;
+      -webkit-animation: flip 0.5s forwards;
+      animation: flip 0.5s forwards;
+      z-index: 2;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+    
+    .digit .flip span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: var(--digit-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--digit-font-size) * 0.95);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      color: #0ff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+    
+    @-webkit-keyframes flip {
+      0% { -webkit-transform: rotateX(0deg); transform: rotateX(0deg); }
+      100% { -webkit-transform: rotateX(-90deg); transform: rotateX(-90deg); }
+    }
+    
+    @keyframes flip {
+      0% { -webkit-transform: rotateX(0deg); transform: rotateX(0deg); }
+      100% { -webkit-transform: rotateX(-90deg); transform: rotateX(-90deg); }
+    }
+    
+    .colon {
+      font-size: var(--colon-size);
+      color: #0ff;
+      margin: 0 clamp(2px, 1vw, 15px);
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6),
+                   0 0 10px rgba(0, 255, 255, 0.3);
+      -webkit-animation: pulse 2s infinite;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    
+    @-webkit-keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Cyberpunk flickering fluorescent tube effects */
+    @keyframes fluorescentFlicker {
+      0% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+        filter: brightness(1);
+      }
+      2% { 
+        opacity: 0.4;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.3), 0 0 5px rgba(0, 255, 255, 0.1);
+        filter: brightness(0.7);
+      }
+      3% { 
+        opacity: 1;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8), 0 0 15px rgba(0, 255, 255, 0.4), 0 0 20px rgba(0, 255, 255, 0.2);
+        filter: brightness(1.2);
+      }
+      5% { 
+        opacity: 0.2;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.5);
+      }
+      6% { 
+        opacity: 0.9;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.3);
+        filter: brightness(1.1);
+      }
+      8% { 
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.6);
+      }
+      9% { 
+        opacity: 1;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.9), 0 0 20px rgba(0, 255, 255, 0.5), 0 0 30px rgba(0, 255, 255, 0.2);
+        filter: brightness(1.3);
+      }
+      12% { 
+        opacity: 0.1;
+        text-shadow: none;
+        filter: brightness(0.3);
+      }
+      13% { 
+        opacity: 0.8;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+      15%, 100% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+    }
+    
+    @keyframes fluorescentBuzz {
+      0% { 
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        transform: translateY(0);
+      }
+      10% { 
+        text-shadow: 0 0 3px rgba(0, 255, 255, 0.4), 0 0 6px rgba(0, 255, 255, 0.2);
+        transform: translateY(-0.5px);
+      }
+      20% { 
+        text-shadow: 0 0 7px rgba(0, 255, 255, 0.8), 0 0 14px rgba(0, 255, 255, 0.4);
+        transform: translateY(0.5px);
+      }
+      30% { 
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.3), 0 0 4px rgba(0, 255, 255, 0.1);
+        transform: translateY(-0.3px);
+      }
+      40% { 
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.7), 0 0 12px rgba(0, 255, 255, 0.3);
+        transform: translateY(0.3px);
+      }
+      50% { 
+        text-shadow: 0 0 4px rgba(0, 255, 255, 0.5), 0 0 8px rgba(0, 255, 255, 0.2);
+        transform: translateY(0);
+      }
+      100% { 
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fluorescentStartup {
+      0% { 
+        opacity: 0;
+        text-shadow: none;
+        filter: brightness(0);
+      }
+      5% { 
+        opacity: 0.2;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.3);
+      }
+      8% { 
+        opacity: 0;
+        text-shadow: none;
+        filter: brightness(0);
+      }
+      12% { 
+        opacity: 0.5;
+        text-shadow: 0 0 3px rgba(0, 255, 255, 0.4);
+        filter: brightness(0.6);
+      }
+      15% { 
+        opacity: 0.1;
+        text-shadow: 0 0 1px rgba(0, 255, 255, 0.1);
+        filter: brightness(0.2);
+      }
+      20% { 
+        opacity: 0.8;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(0.9);
+      }
+      25% { 
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(0, 255, 255, 0.2);
+        filter: brightness(0.4);
+      }
+      30%, 100% { 
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.3);
+        filter: brightness(1);
+      }
+    }
+    
+    /* Fluorescent tube effect classes */
+    .digit.fluorescent-flicker {
+      animation: fluorescentFlicker 1s ease-in-out;
+    }
+    
+    .digit.fluorescent-buzz {
+      animation: fluorescentBuzz 0.8s ease-in-out;
+    }
+    
+    .digit.fluorescent-startup {
+      animation: fluorescentStartup 1.2s ease-in-out;
+    }
+    
+    .digit.fluorescent-flicker span {
+      animation: fluorescentFlicker 1s ease-in-out;
+    }
+    
+    .digit.fluorescent-buzz span {
+      animation: fluorescentBuzz 0.8s ease-in-out;
+    }
+    
+    .digit.fluorescent-startup span {
+      animation: fluorescentStartup 1.2s ease-in-out;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      color: #0ff;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: clamp(4px, 1vw, 8px);
+      padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px);
+      font-size: clamp(14px, 3vw, 22px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      white-space: nowrap;
+      /* iOS button fixes */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    button:hover, button:focus {
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      outline: none;
+    }
+    
+    /* Touch-specific hover for mobile */
+    @media (hover: none) {
+      button:hover {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border-color: rgba(0, 255, 255, 0.3);
+        box-shadow: none;
+      }
+      
+      button:active {
+        background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+        border-color: rgba(0, 255, 255, 0.6);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      }
+    }
+    
+    .countdown-inputs {
+      display: flex;
+      gap: clamp(2px, 1vw, 5px);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .countdown-inputs input[type="number"] {
+      width: clamp(40px, 8vw, 60px);
+      font-size: clamp(14px, 3vw, 22px);
+      padding: clamp(3px, 1vw, 5px);
+      border-radius: clamp(3px, 0.8vw, 6px);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.7);
+      color: #0ff;
+      text-align: center;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      /* iOS input fixes */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      -webkit-border-radius: clamp(3px, 0.8vw, 6px);
+    }
+    
+    .countdown-inputs input[type="number"]:focus {
+      outline: none;
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    
+    .countdown-inputs span {
+      color: #0ff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      font-size: clamp(14px, 3vw, 22px);
+    }
+    /* Effective time today calculator */
+    .hideable-calculator {
+      margin-top: clamp(15px, 3vw, 30px);
+      color: #0ff;
+      font-size: clamp(16px, 4vw, 28px);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 10px #0ff;
+      transition: opacity 0.3s ease;
+      text-align: center;
+      max-width: 95vw;
+    }
+    
+    .hideable-calculator.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Add effective time control */
+    .hideable-add-time {
+      margin-top: clamp(10px, 2vw, 20px);
+      transition: opacity 0.3s ease;
+      text-align: center;
+      max-width: 95vw;
+    }
+    
+    .hideable-add-time.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .add-time-content {
+      -webkit-backdrop-filter: blur(5px);
+      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.4);
+      padding: clamp(8px, 2vw, 15px);
+      border-radius: clamp(6px, 1.5vw, 12px);
+      border: 1px solid rgba(0, 255, 0, 0.2);
+      display: inline-block;
+    }
+    
+    .add-time-label {
+      color: #0ff;
+      font-size: clamp(12px, 3vw, 20px);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 500;
+      text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+      margin-right: clamp(8px, 2vw, 12px);
+    }
+    
+    #pendingTimeDisplay {
+      color: #0ff;
+      font-size: clamp(14px, 3.5vw, 24px);
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      margin-right: clamp(8px, 2vw, 12px);
+      min-width: clamp(60px, 12vw, 80px);
+      display: inline-block;
+    }
+    
+    .add-time-buttons {
+      display: inline-flex;
+      gap: clamp(4px, 1vw, 8px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .time-btn {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      color: #0ff;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: clamp(3px, 0.8vw, 6px);
+      padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 12px);
+      font-size: clamp(10px, 2.5vw, 16px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+      white-space: nowrap;
+      /* iOS button fixes */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .time-btn.flash {
+      -webkit-animation: flashGlow 1s infinite alternate;
+      animation: flashGlow 1s infinite alternate;
+      box-shadow: 0 0 20px 5px #0ff, 0 0 40px 10px #0ff;
+    }
+    
+    @-webkit-keyframes flashGlow {
+      0% { box-shadow: 0 0 10px 2px #0ff, 0 0 20px 4px #0ff; }
+      100% { box-shadow: 0 0 30px 10px #0ff, 0 0 60px 20px #0ff; }
+    }
+    
+    @keyframes flashGlow {
+      0% { box-shadow: 0 0 10px 2px #0ff, 0 0 20px 4px #0ff; }
+      100% { box-shadow: 0 0 30px 10px #0ff, 0 0 60px 20px #0ff; }
+    }
+    
+    .time-btn:hover, .time-btn:focus {
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+      outline: none;
+    }
+    
+    /* Touch-specific hover for mobile */
+    @media (hover: none) {
+      .time-btn:hover {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border-color: rgba(0, 255, 255, 0.3);
+        box-shadow: none;
+      }
+      
+      .time-btn:active {
+        background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+        border-color: rgba(0, 255, 255, 0.6);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+      }
+    }
+    
+    .time-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Mobile adjustments for add time control */
+    @media (max-width: 480px) {
+      .add-time-content {
+        padding: 8px;
+      }
+      
+      .add-time-buttons {
+        margin-top: 5px;
+        width: 100%;
+      }
+      
+      .time-btn {
+        flex: 1;
+        min-width: 50px;
+      }
+    }
+    
+    /* Mobile-specific adjustments - ensure single line */
+    @media (max-width: 480px) {
+      body {
+        padding: 2px;
+      }
+      
+      .flip-clock {
+        padding: 0 2vw;
+        /* Force even tighter spacing if needed */
+        gap: max(1px, var(--gap));
+        flex-wrap: nowrap; /* Prevent wrapping to multiple lines */
+      }
+      
+      .controls {
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+      
+      .countdown-inputs {
+        justify-content: center;
+        width: 100%;
+        margin-top: 3px;
+      }
+      
+      /* Adjust digit sizes for better visibility on small screens */
+      :root {
+        --digit-width: 55px;
+        --digit-height: 80px;
+        --digit-font-size: 50px;
+        --colon-size: 40px;
+        --gap: 4px;
+        --border-radius: 10px;
+      }
+    }
+    
+    /* Emergency single-line enforcement for all screens */
+    @media (max-width: 600px) {
+      .flip-clock-container {
+        width: 100%;
+        padding: 0 10px;
+        box-sizing: border-box;
+        min-height: calc(var(--digit-height) + 40px); /* Ensure enough vertical space */
+      }
+      
+      .flip-clock {
+        /* Calculate exact width needed and scale if necessary */
+        width: auto;
+        transform-origin: center center;
+        /* Scale down if content is too wide */
+        transform: scale(min(1, calc(95vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        margin: 0 auto;
+        white-space: nowrap; /* Prevent wrapping */
+        display: inline-flex; /* Better control over layout */
+      }
+      
+      .digit {
+        overflow: visible; /* Ensure digits are fully visible */
+      }
+    }
+    
+    /* Extreme failsafe for any remaining edge cases */
+    @media (max-width: 480px) {
+      .flip-clock-container {
+        padding: 0 5px;
+        min-height: calc(var(--digit-height) + 30px);
+      }
+      
+      .flip-clock {
+        /* Force scale down if still doesn't fit */
+        transform: scale(min(1, calc(92vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        margin: 0 auto;
+        transform-origin: center center;
+      }
+      
+      /* Adjust digit sizes for better visibility */
+      :root {
+        --digit-width: 60px;
+        --digit-height: 85px;
+        --digit-font-size: 55px;
+        --colon-size: 45px;
+        --gap: 5px;
+        --border-radius: 10px;
+      }
+      
+      /* Ensure digits are fully visible */
+      .digit {
+        overflow: visible;
+      }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 320px) {
+      .flip-clock-container {
+        padding: 0 2px;
+        min-height: calc(var(--digit-height) + 20px);
+      }
+      
+      .flip-clock {
+        transform: scale(min(1, calc(98vw / (6 * var(--digit-width) + 2 * var(--colon-size) + 5 * var(--gap)))));
+        transform-origin: center center;
+      }
+      
+      :root {
+        --digit-width: 45px;
+        --digit-height: 65px;
+        --digit-font-size: 40px;
+        --colon-size: 30px;
+        --gap: 2px;
+        --border-radius: 8px;
+      }
+      
+      .digit {
+        overflow: visible;
+        border-radius: var(--border-radius);
+      }
+      
+      /* Ensure digits are fully contained */
+      .digit .top span, .digit .bottom span, .digit .flip span {
+        font-size: calc(var(--digit-font-size) - 2px);
+      }
+    }
+    
+    /* Landscape mobile - maximize space utilization */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        justify-content: center;
+        padding: 2px;
+      }
+      
+      .flip-clock-container {
+        padding: 2px 1px;
+        min-height: calc(var(--digit-height) + 10px);
+        width: 100%;
+        align-items: center;
+        flex-grow: 1;
+      }
+      
+      .flip-clock {
+        margin: 0;
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .controls {
+        margin-bottom: 3px;
+        padding: 4px 6px;
+      }
+      
+      .hideable-calculator {
+        margin-top: 3px;
+        font-size: clamp(12px, 3vw, 18px);
+      }
+      
+      .hideable-add-time {
+        margin-top: 3px;
+      }
+      
+      /* Maximize button sizes for landscape */
+      button {
+        padding: clamp(4px, 1.5vw, 8px) clamp(8px, 2.5vw, 16px);
+        font-size: clamp(12px, 2.5vw, 18px);
+      }
+      
+      /* Ensure digits utilize maximum space */
+      .digit {
+        overflow: visible;
+      }
+      
+      .digit .top span, .digit .bottom span, .digit .flip span {
+        overflow: visible;
+      }
+    }
+    
+    /* iOS Fullscreen mode styles */
+    .ios-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+      -webkit-user-select: none !important;
+      -webkit-touch-callout: none !important;
+      z-index: 9999;
+    }
+    
+    .ios-fullscreen .flip-clock-container {
+      padding: 5px 2px;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+    }
+    
+    .ios-fullscreen .controls,
+    .ios-fullscreen .hideable-calculator,
+    .ios-fullscreen .hideable-add-time {
+      position: absolute;
+      z-index: 10000;
+    }
+    
+    .ios-fullscreen .controls {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .ios-fullscreen .hideable-calculator {
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .ios-fullscreen .hideable-add-time {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    /* Goal Modal Dialog */
+    #goalModal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.45);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #goalModal > div {
+      background: rgba(0, 0, 0, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 0 24px #0ff8;
+      padding: 32px 24px 24px 24px;
+      min-width: 260px;
+      max-width: 90vw;
+      text-align: center;
+    }
+    
+    #goalModal div > div {
+      color: #0ff;
+      font-size: 1.3em;
+      font-family: 'Quicksand', Arial, sans-serif;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    
+    #goalInput {
+      width: 90%;
+      font-size: 1.1em;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #111;
+      color: #0ff;
+      margin-bottom: 18px;
+      outline: none;
+    }
+    
+    #goalModal button {
+      background: #0ff;
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    
+    #goalModal button#goalModalCancel {
+      background: #222;
+      color: #0ff;
+      border: 1px solid #0ff;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <!-- Live view camera preview window -->
+  <div id="liveViewContainer">
+    <button id="closeLiveViewBtn" title="Close live view">×</button>
+    <video id="liveViewVideo" autoplay playsinline muted></video>
+  </div>
+  <div id="timerTagDisplay" style="display:none; margin: 18px auto 10px auto; text-align:center; width:100%;">
+    <span id="timerTagText" style="color:#0ff; font-size: clamp(16px, 4vw, 28px); font-family: 'Quicksand', Arial, sans-serif; font-weight: 700; text-shadow: 0 0 10px #0ff; display:inline-block;"></span>
+  </div>
+  <div class="controls">
+  <button id="clockMode">Clock</button>
+    <button id="countdownMode">Countdown</button>
+    <span class="countdown-inputs" id="countdownInputs" style="display:none;">
+      <input type="number" id="countdownHour" min="0" max="99" value="0" />
+      <span>:</span>
+      <input type="number" id="countdownMinute" min="0" max="59" value="1" />
+      <span>:</span>
+      <input type="number" id="countdownSecond" min="0" max="59" value="0" />
+    </span>
+    <button id="fullscreenBtn">Fullscreen</button>
+    <button id="tagsBtn">Goal</button>
+    <button id="liveViewBtn">Turn on Live View</button>
+    <button id="startCountdown" style="display:none;">Start</button>
+  </div>
+  <div class="flip-clock-container">
+    <div class="flip-clock" id="flipClock">
+      <!-- Digits will be rendered here -->
+    </div>
+  </div>
+  <div id="countdownCalculator" class="hideable-calculator">
+    Effective time today: <span id="effectiveTime">00:00:00</span>
+  </div>
+  </div>
+  <!-- moved tag display into countdownCalculator above -->
+  <div id="addEffectiveTime" class="hideable-add-time">
+    <div class="add-time-content">
+      <span class="add-time-label">Add effective time:</span>
+      <span id="pendingTimeDisplay">00:00:00</span>
+      <div class="add-time-buttons">
+        <button id="addTimeBtn" class="time-btn">Add</button>
+        <button id="clearTimeBtn" class="time-btn">Clear</button>
+      </div>
+    </div>
+  </div>
+  <!-- Goal Modal Dialog -->
+  <div id="goalModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; z-index:2000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:rgba(0,0,0,0.95); border-radius:16px; box-shadow:0 0 24px #0ff8; padding:32px 24px 24px 24px; min-width:260px; max-width:90vw; text-align:center;">
+      <div style="color:#0ff; font-size:1.3em; font-family:'Quicksand',Arial,sans-serif; font-weight:700; margin-bottom:18px;">Set Goal for this timer</div>
+      <input id="goalInput" type="text" maxlength="80" style="width:90%; font-size:1.1em; padding:8px; border-radius:8px; border:1px solid #0ff; background:#111; color:#0ff; margin-bottom:18px; outline:none;" />
+      <div style="margin-top:8px; display:flex; gap:12px; justify-content:center;">
+        <button id="goalModalOk" style="background:#0ff; color:#000; font-weight:700; border:none; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">OK</button>
+        <button id="goalModalCancel" style="background:#222; color:#0ff; font-weight:700; border:1px solid #0ff; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Live view camera preview logic
+    const liveViewBtn = document.getElementById('liveViewBtn');
+    const liveViewContainer = document.getElementById('liveViewContainer');
+    const liveViewVideo = document.getElementById('liveViewVideo');
+    const closeLiveViewBtn = document.getElementById('closeLiveViewBtn');
+    let liveViewStream = null;
+
+    liveViewBtn.addEventListener('click', async () => {
+      if (liveViewStream) {
+        // Already running, just show
+        liveViewContainer.classList.add('active');
+        return;
+      }
+      try {
+        liveViewBtn.disabled = true;
+        liveViewBtn.textContent = 'Loading...';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        liveViewStream = stream;
+        liveViewVideo.srcObject = stream;
+        liveViewContainer.classList.add('active');
+        liveViewBtn.textContent = 'Turn on Live View';
+      } catch (e) {
+        alert('Unable to access camera. Please allow camera access or check your device.');
+        liveViewBtn.textContent = 'Turn on Live View';
+      } finally {
+        liveViewBtn.disabled = false;
+      }
+    });
+
+    closeLiveViewBtn.addEventListener('click', () => {
+      liveViewContainer.classList.remove('active');
+      // Optionally stop the stream to release camera
+      if (liveViewStream) {
+        liveViewStream.getTracks().forEach(track => track.stop());
+        liveViewStream = null;
+        liveViewVideo.srcObject = null;
+      }
+    });
+    // Matrix rain effect
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      // Recalculate columns when canvas resizes
+      updateMatrixColumns();
+    }
+    
+    let drops = [];
+    let columns = 0;
+    
+    function updateMatrixColumns() {
+      const fontSize = Math.max(12, Math.min(16, window.innerWidth / 100));
+      columns = Math.floor(canvas.width / fontSize);
+      
+      // Reset drops array if columns changed
+      if (drops.length !== columns) {
+        drops = [];
+        for (let i = 0; i < columns; i++) {
+          drops[i] = Math.random() * -100;
+        }
+      }
+    }
+    
+    resizeCanvas();
+    
+    // Enhanced resize handler for better performance on mobile
+    let matrixResizeTimeout;
+    window.addEventListener('resize', function() {
+      clearTimeout(matrixResizeTimeout);
+      matrixResizeTimeout = setTimeout(resizeCanvas, 150);
+      // Hide live view on resize
+      liveViewContainer.classList.remove('active');
+    });
+    
+    // Handle orientation change on mobile devices
+    window.addEventListener('orientationchange', function() {
+      setTimeout(resizeCanvas, 300);
+    });
+    
+    const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/~`ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾁﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾙﾚﾛﾜﾝ';
+    
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const fontSize = Math.max(12, Math.min(16, window.innerWidth / 100));
+      ctx.font = fontSize + 'px monospace';
+      
+      for (let i = 0; i < drops.length && i < columns; i++) {
+        const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        
+        const gradient = ctx.createLinearGradient(0, y - fontSize * 5, 0, y);
+        gradient.addColorStop(0, 'rgba(0, 255, 0, 0)');
+        gradient.addColorStop(0.3, 'rgba(0, 255, 0, 0.4)');
+        gradient.addColorStop(0.7, 'rgba(0, 255, 0, 0.8)');
+        gradient.addColorStop(1, 'rgba(0, 255, 0, 1)');
+        ctx.fillStyle = gradient;
+        
+        ctx.fillText(char, x, y);
+        
+        if (drops[i] * fontSize > 0 && Math.random() > 0.9) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#00ff00';
+          ctx.fillStyle = '#88ff88';
+          ctx.fillText(char, x, y);
+          ctx.shadowBlur = 0;
+        }
+        
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    
+    // Use requestAnimationFrame for better performance on mobile
+    let matrixAnimationId;
+    let lastMatrixUpdate = 0;
+    
+    function animateMatrix(timestamp) {
+      if (timestamp - lastMatrixUpdate >= 35) {
+        drawMatrix();
+        lastMatrixUpdate = timestamp;
+      }
+      matrixAnimationId = requestAnimationFrame(animateMatrix);
+    }
+    
+    // Start matrix animation
+    animateMatrix(0);
+    function pad(num) {
+      return num.toString().padStart(2, '0');
+    }
+    function renderDigit(container, value, prevValue) {
+      container.innerHTML = '';
+      const top = document.createElement('div');
+      top.className = 'top';
+      const topSpan = document.createElement('span');
+      topSpan.textContent = value;
+      top.appendChild(topSpan);
+      
+      const bottom = document.createElement('div');
+      bottom.className = 'bottom';
+      const bottomSpan = document.createElement('span');
+      bottomSpan.textContent = value;
+      bottom.appendChild(bottomSpan);
+      
+      container.appendChild(top);
+      container.appendChild(bottom);
+      
+      if (prevValue !== undefined && prevValue !== value) {
+        const flip = document.createElement('div');
+        flip.className = 'flip';
+        const flipSpan = document.createElement('span');
+        flipSpan.textContent = prevValue;
+        flip.appendChild(flipSpan);
+        container.appendChild(flip);
+        
+        flip.addEventListener('animationend', () => {
+          flip.remove();
+        });
+        
+        // Fallback for older browsers that might not support animationend
+        setTimeout(() => {
+          if (flip.parentNode) {
+            flip.remove();
+          }
+        }, 600);
+      }
+    }
+    // Cyberpunk fluorescent tube flickering effects
+    function triggerRandomGlitch() {
+      const digits = document.querySelectorAll('.digit');
+      if (digits.length === 0) return;
+      
+      // Randomly select 1-2 digits to flicker like fluorescent tubes
+      const flickerCount = Math.random() < 0.8 ? 1 : 2;
+      const selectedDigits = [];
+      
+      for (let i = 0; i < flickerCount; i++) {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * digits.length);
+        } while (selectedDigits.includes(randomIndex));
+        
+        selectedDigits.push(randomIndex);
+        const digit = digits[randomIndex];
+        
+        // Remove any existing fluorescent classes
+        digit.classList.remove('fluorescent-flicker', 'fluorescent-buzz', 'fluorescent-startup');
+        
+        // Randomly choose fluorescent tube effect type
+        const fluorescentTypes = ['fluorescent-flicker', 'fluorescent-buzz', 'fluorescent-startup'];
+        const weights = [0.5, 0.3, 0.2]; // Flicker most common, startup least common
+        
+        let randomValue = Math.random();
+        let selectedEffect;
+        
+        if (randomValue < weights[0]) {
+          selectedEffect = fluorescentTypes[0]; // flicker
+        } else if (randomValue < weights[0] + weights[1]) {
+          selectedEffect = fluorescentTypes[1]; // buzz
+        } else {
+          selectedEffect = fluorescentTypes[2]; // startup
+        }
+        
+        // Apply fluorescent tube effect
+        digit.classList.add(selectedEffect);
+        
+        // Remove effect after animation completes
+        const duration = selectedEffect === 'fluorescent-startup' ? 1200 : 
+                        selectedEffect === 'fluorescent-flicker' ? 1000 : 800;
+        
+        setTimeout(() => {
+          digit.classList.remove(selectedEffect);
+        }, duration);
+      }
+    }
+    
+    // Start random fluorescent tube flickering
+    function startCyberpunkGlitches() {
+      // Trigger fluorescent flicker every 4-10 seconds randomly
+      function scheduleNextGlitch() {
+        const delay = Math.random() * 6000 + 4000; // 4-10 seconds
+        setTimeout(() => {
+          triggerRandomGlitch();
+          scheduleNextGlitch();
+        }, delay);
+      }
+      
+      // Initial delay before first flicker
+      setTimeout(() => {
+        scheduleNextGlitch();
+      }, 3000);
+    }
+
+    // Mobile detection and dynamic sizing for landscape orientation
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (window.innerWidth <= 768) ||
+             ('ontouchstart' in window);
+    }
+    
+    function isLandscapeMobile() {
+      return isMobileDevice() && 
+             (window.innerWidth > window.innerHeight) && 
+             (window.innerHeight <= 500);
+    }
+    
+    function calculateOptimalSizes() {
+      const isMobile = isMobileDevice();
+      const isLandscape = isLandscapeMobile();
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      
+      if (!isMobile) {
+        return null; // Use CSS variables for desktop
+      }
+      
+      // More aggressive screen utilization - use more of the available space
+      const availableWidth = screenWidth * 0.98; // Use 98% of screen width
+      const availableHeight = isLandscape ? screenHeight * 0.75 : screenHeight * 0.5; // Use more height
+      const totalElements = 8; // 6 digits + 2 colons
+      
+      let digitWidth, digitHeight, fontSize, colonSize, gap;
+      
+      if (isLandscape) {
+        // Landscape mobile - maximize size while maintaining fit
+        const maxElementWidth = availableWidth / totalElements;
+        const maxDigitHeight = availableHeight * 0.9; // Use 90% of available height
+        
+        // Start with width-constrained size, then check height
+        digitWidth = Math.max(50, maxElementWidth * 0.85); // More aggressive width usage
+        digitHeight = Math.min(maxDigitHeight, digitWidth * 1.8); // Taller ratio for landscape
+        
+        // If height allows, make digits even larger
+        if (digitHeight < maxDigitHeight * 0.8) {
+          const heightBasedWidth = maxDigitHeight / 1.8;
+          if (heightBasedWidth * totalElements <= availableWidth) {
+            digitWidth = Math.min(heightBasedWidth, digitWidth * 1.3);
+            digitHeight = digitWidth * 1.8;
+          }
+        }
+        
+        fontSize = digitHeight * 0.65; // Larger font relative to digit size
+        colonSize = fontSize * 0.75;
+        gap = Math.max(2, digitWidth * 0.06); // Slightly more gap for larger digits
+        
+      } else {
+        // Portrait mobile - also maximize usage
+        const maxElementWidth = availableWidth / totalElements;
+        const maxDigitHeight = availableHeight * 0.85;
+        
+        digitWidth = Math.max(60, maxElementWidth * 0.9); // More width usage
+        digitHeight = Math.min(maxDigitHeight, digitWidth * 1.4);
+        
+        // If height allows, make digits larger
+        if (digitHeight < maxDigitHeight * 0.8) {
+          const heightBasedWidth = maxDigitHeight / 1.4;
+          if (heightBasedWidth * totalElements <= availableWidth) {
+            digitWidth = Math.min(heightBasedWidth, digitWidth * 1.2);
+            digitHeight = digitWidth * 1.4;
+          }
+        }
+        
+        fontSize = digitHeight * 0.6;
+        colonSize = fontSize * 0.8;
+        gap = Math.max(3, digitWidth * 0.08);
+      }
+      
+      return {
+        digitWidth: Math.floor(digitWidth),
+        digitHeight: Math.floor(digitHeight),
+        fontSize: Math.floor(fontSize),
+        colonSize: Math.floor(colonSize),
+        gap: Math.floor(gap),
+        borderRadius: Math.max(8, Math.floor(digitWidth * 0.12))
+      };
+    }
+    
+    function applySizes(sizes) {
+      if (!sizes) return;
+      
+      const root = document.documentElement;
+      root.style.setProperty('--digit-width', sizes.digitWidth + 'px');
+      root.style.setProperty('--digit-height', sizes.digitHeight + 'px');
+      root.style.setProperty('--digit-font-size', sizes.fontSize + 'px');
+      root.style.setProperty('--colon-size', sizes.colonSize + 'px');
+      root.style.setProperty('--gap', sizes.gap + 'px');
+      root.style.setProperty('--border-radius', sizes.borderRadius + 'px');
+    }
+    
+    function adjustForMobile() {
+      const sizes = calculateOptimalSizes();
+      applySizes(sizes);
+      
+      // Additional adjustments for mobile devices
+      if (isMobileDevice()) {
+        const flipClockContainer = document.querySelector('.flip-clock-container');
+        const flipClock = document.querySelector('.flip-clock');
+        
+        if (flipClockContainer && flipClock) {
+          if (isLandscapeMobile()) {
+            // Minimize padding for landscape to maximize space
+            flipClockContainer.style.padding = '2px 1px';
+            flipClock.style.margin = '0 auto';
+          } else {
+            // Normal padding for portrait
+            flipClockContainer.style.padding = '10px 5px';
+          }
+          
+          // Ensure proper fit with more aggressive scaling if needed
+          setTimeout(() => {
+            const clockWidth = flipClock.scrollWidth;
+            const containerWidth = flipClockContainer.clientWidth - 5; // Minimal margins
+            
+            if (clockWidth > containerWidth) {
+              // More aggressive scaling - use up to 99% of container width
+              const scale = Math.min(containerWidth / clockWidth, 0.99);
+              flipClock.style.transform = `scale(${scale})`;
+              flipClock.style.transformOrigin = 'center center';
+            } else {
+              // If it fits, try to scale UP slightly for better utilization
+              const maxScale = containerWidth / clockWidth;
+              if (maxScale > 1.1 && maxScale < 1.3) {
+                flipClock.style.transform = `scale(${Math.min(maxScale * 0.95, 1.25)})`;
+                flipClock.style.transformOrigin = 'center center';
+              } else {
+                flipClock.style.transform = 'none';
+              }
+            }
+          }, 100);
+        }
+      }
+    }
+    
+    // Enhanced resize and orientation handlers
+    let resizeTimer;
+    function handleResize() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        adjustForMobile();
+      }, 150);
+    }
+    
+    function handleOrientationChange() {
+      setTimeout(() => {
+        adjustForMobile();
+      }, 300);
+    }
+
+    const flipClock = document.getElementById('flipClock');
+    let mode = 'clock';
+    let countdown = 60;
+    let countdownInterval = null;
+    let prevDigits = [null, null, null, null, null, null];
+    function renderClock(h, m, s) {
+      const timeStr = pad(h) + pad(m) + pad(s);
+      flipClock.innerHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const digit = document.createElement('div');
+        digit.className = 'digit';
+        renderDigit(digit, timeStr[i], prevDigits[i]);
+        flipClock.appendChild(digit);
+        prevDigits[i] = timeStr[i];
+        if (i === 1 || i === 3) {
+          const colon = document.createElement('div');
+          colon.className = 'colon';
+          colon.textContent = ':';
+          flipClock.appendChild(colon);
+        }
+      }
+      
+      // Mobile fit check after rendering
+      if (isMobileDevice()) {
+        setTimeout(() => {
+          ensureMobileFit();
+        }, 50);
+      }
+    }
+    
+    function ensureMobileFit() {
+      const flipClock = document.querySelector('.flip-clock');
+      const container = document.querySelector('.flip-clock-container');
+      
+      if (!flipClock || !container) return;
+      
+      const clockWidth = flipClock.scrollWidth;
+      const containerWidth = container.clientWidth - 10; // Minimal margin
+      
+      if (clockWidth > containerWidth) {
+        // Scale down if too big
+        const scale = Math.min(containerWidth / clockWidth, 0.98);
+        flipClock.style.transform = `scale(${scale})`;
+        flipClock.style.transformOrigin = 'center center';
+      } else {
+        // If it fits comfortably, try to scale up for better utilization
+        const utilizationRatio = clockWidth / containerWidth;
+        if (utilizationRatio < 0.8) { // If using less than 80% of space
+          const maxScale = containerWidth / clockWidth;
+          const optimalScale = Math.min(maxScale * 0.95, 1.2); // Cap at 20% increase
+          if (optimalScale > 1.05) { // Only scale up if meaningful increase
+            flipClock.style.transform = `scale(${optimalScale})`;
+            flipClock.style.transformOrigin = 'center center';
+          }
+        }
+      }
+    }
+    function showClock() {
+      mode = 'clock';
+      document.getElementById('countdownInputs').style.display = 'none';
+      document.getElementById('startCountdown').style.display = 'none';
+      // Do NOT clear countdownInterval, so countdown keeps running in background
+      function update() {
+        const now = new Date();
+        renderClock(now.getHours(), now.getMinutes(), now.getSeconds());
+      }
+      update();
+      // Use a separate interval for clock display
+      if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
+      window.clockDisplayInterval = setInterval(update, 1000);
+      showControlsTemporarily();
+    }
+    function showCountdown() {
+      mode = 'countdown';
+      document.getElementById('countdownInputs').style.display = '';
+      document.getElementById('startCountdown').style.display = '';
+      // Stop clock display interval if running
+      if (window.clockDisplayInterval) clearInterval(window.clockDisplayInterval);
+      // If countdown is not running, show the input values
+      if (!countdownInterval) {
+        let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
+        let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
+        let s = parseInt(document.getElementById('countdownSecond').value, 10) || 0;
+        renderClock(h, m, s);
+      } else {
+        // Resume countdown display (do not reset timer)
+        let h = Math.floor(countdown / 3600);
+        let m = Math.floor((countdown % 3600) / 60);
+        let s = countdown % 60;
+        renderClock(h, m, s);
+      }
+      showControlsTemporarily();
+    }
+    // Effective countdown calculator
+    let effectiveCountdownSeconds = 0;
+    let lastCountdownDuration = 0;
+    let pendingEffectiveTime = 0;
+    let lastCountdownDate = new Date().toDateString();
+    
+    function updateEffectiveTimeDisplay() {
+      let sec = effectiveCountdownSeconds;
+      let h = Math.floor(sec / 3600);
+      let m = Math.floor((sec % 3600) / 60);
+      let s = sec % 60;
+      document.getElementById('effectiveTime').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    
+    function updatePendingTimeDisplay() {
+      let sec = pendingEffectiveTime;
+      let h = Math.floor(sec / 3600);
+      let m = Math.floor((sec % 3600) / 60);
+      let s = sec % 60;
+      document.getElementById('pendingTimeDisplay').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+      
+      // Enable/disable buttons based on pending time
+      const addBtn = document.getElementById('addTimeBtn');
+      const clearBtn = document.getElementById('clearTimeBtn');
+      
+      addBtn.disabled = pendingEffectiveTime === 0;
+      clearBtn.disabled = pendingEffectiveTime === 0;
+      
+      // Flash the add button if pending time is assigned
+      if (pendingEffectiveTime > 0) {
+        addBtn.classList.add('flash');
+      } else {
+        addBtn.classList.remove('flash');
+      }
+    }
+    
+    function resetEffectiveIfNewDay() {
+      let today = new Date().toDateString();
+      if (today !== lastCountdownDate) {
+        effectiveCountdownSeconds = 0;
+        lastCountdownDate = today;
+        updateEffectiveTimeDisplay();
+      }
+    }
+    
+    function addPendingTime() {
+      if (pendingEffectiveTime > 0) {
+        effectiveCountdownSeconds += pendingEffectiveTime;
+        updateEffectiveTimeDisplay();
+        // Flash the effective time value
+        const effElem = document.getElementById('effectiveTime');
+        effElem.classList.add('flash');
+        setTimeout(() => effElem.classList.remove('flash'), 1000);
+        pendingEffectiveTime = 0;
+        updatePendingTimeDisplay();
+      }
+    }
+    
+    function clearPendingTime() {
+      pendingEffectiveTime = 0;
+      updatePendingTimeDisplay();
+    }
+    
+    function editPendingTime() {
+      let currentH = Math.floor(pendingEffectiveTime / 3600);
+      let currentM = Math.floor((pendingEffectiveTime % 3600) / 60);
+      let currentS = pendingEffectiveTime % 60;
+      
+      let newTime = prompt(`Edit time (format: HH:MM:SS)\nCurrent: ${pad(currentH)}:${pad(currentM)}:${pad(currentS)}`, `${pad(currentH)}:${pad(currentM)}:${pad(currentS)}`);
+      
+      if (newTime !== null) {
+        let timeParts = newTime.split(':');
+        if (timeParts.length === 3) {
+          let h = parseInt(timeParts[0], 10) || 0;
+          let m = parseInt(timeParts[1], 10) || 0;
+          let s = parseInt(timeParts[2], 10) || 0;
+          
+          if (h >= 0 && m >= 0 && m < 60 && s >= 0 && s < 60) {
+            pendingEffectiveTime = h * 3600 + m * 60 + s;
+            updatePendingTimeDisplay();
+          } else {
+            alert('Invalid time format. Please use HH:MM:SS format.');
+          }
+        } else {
+          alert('Invalid time format. Please use HH:MM:SS format.');
+        }
+      }
+    }
+    // Create audio context for soft notification sound
+    let audioContext = null;
+    
+    function createSoftNotificationSound() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create a gentle notification sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Soft, pleasant frequency
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.3);
+        
+        // Gentle volume envelope
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+        
+        oscillator.type = 'sine';
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.8);
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+    function startCountdown() {
+      let h = parseInt(document.getElementById('countdownHour').value, 10) || 0;
+      let m = parseInt(document.getElementById('countdownMinute').value, 10) || 0;
+      let s = parseInt(document.getElementById('countdownSecond').value, 10) || 0;
+      countdown = h * 3600 + m * 60 + s;
+      lastCountdownDuration = countdown;
+      resetEffectiveIfNewDay();
+      if (isNaN(countdown) || countdown < 1) countdown = 60;
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      function update() {
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          if (mode === 'countdown') renderClock(0, 0, 0);
+          
+          // Set pending effective time
+          pendingEffectiveTime = lastCountdownDuration;
+          updatePendingTimeDisplay();
+          
+          // Show controls and make Add button flash
+          showControlsTemporarily();
+          const addTimeSection = document.getElementById('addEffectiveTime');
+          addTimeSection.classList.remove('hide');
+          
+          // Play soft notification sound
+          createSoftNotificationSound();
+          
+          return;
+        }
+        let h = Math.floor(countdown / 3600);
+        let m = Math.floor((countdown % 3600) / 60);
+        let s = countdown % 60;
+        if (mode === 'countdown') renderClock(h, m, s);
+        countdown--;
+      }
+      update();
+      countdownInterval = setInterval(update, 1000);
+    }
+    // Event listeners with improved mobile handling
+    document.getElementById('clockMode').addEventListener('click', function() {
+      // Hide live view window
+      const liveViewContainer = document.getElementById('liveViewContainer');
+      if (liveViewContainer) {
+        // Remember if it was active
+        window.liveViewWasActive = liveViewContainer.classList.contains('active');
+        liveViewContainer.classList.remove('active');
+        // Stop camera stream if running
+        if (window.liveViewStream) {
+          window.liveViewStream.getTracks().forEach(track => track.stop());
+          window.liveViewStream = null;
+          document.getElementById('liveViewVideo').srcObject = null;
+        }
+      }
+      // Hide goal display
+      const timerTagDisplay = document.getElementById('timerTagDisplay');
+      if (timerTagDisplay) timerTagDisplay.style.display = 'none';
+      showClock();
+    });
+    document.getElementById('countdownMode').addEventListener('click', function() {
+      showCountdown();
+      // Restore Goal if set
+      if (window.timerTag && window.timerTag.trim()) {
+        document.getElementById('timerTagDisplay').style.display = 'block';
+      }
+      // Restore live view window if it was active before clock mode
+      if (window.liveViewWasActive) {
+        document.getElementById('liveViewContainer').classList.add('active');
+        window.liveViewWasActive = false;
+      }
+    });
+    document.getElementById('startCountdown').addEventListener('click', startCountdown);
+    
+    // Add effective time controls
+    document.getElementById('addTimeBtn').addEventListener('click', addPendingTime);
+    document.getElementById('clearTimeBtn').addEventListener('click', clearPendingTime);
+    // Fullscreen handling with better mobile support and iOS fix
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      // Check if we're on iOS - improved detection
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      
+      if (isIOS) {
+        // iOS doesn't support true fullscreen API, so use our custom implementation
+        toggleIOSFullscreen();
+      } else {
+        // Standard fullscreen API for other browsers
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+          const elem = document.documentElement;
+          try {
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { // Safari
+              elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+              elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+              elem.msRequestFullscreen();
+            } else {
+              // Fallback for browsers that don't support fullscreen API
+              toggleIOSFullscreen();
+            }
+          } catch (e) {
+            console.log('Fullscreen API failed, using fallback');
+            toggleIOSFullscreen();
+          }
+        } else {
+          try {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { // Safari
+              document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+              document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+              document.msExitFullscreen();
+            }
+          } catch (e) {
+            console.log('Exit fullscreen failed');
+          }
+        }
+      }
+    });
+    
+    // iOS fullscreen simulation
+    let isIOSFullscreen = false;
+    
+    function toggleIOSFullscreen() {
+      // Check if running on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      
+      if (!isIOSFullscreen) {
+        enterIOSFullscreen(isIOS);
+      } else {
+        exitIOSFullscreen(isIOS);
+      }
+    }
+    
+    function enterIOSFullscreen(isIOS) {
+      const body = document.body;
+      const controls = document.querySelector('.controls');
+      const calculator = document.querySelector('#countdownCalculator');
+      const addTime = document.querySelector('#addEffectiveTime');
+      
+      // iOS-specific fullscreen handling
+      if (isIOS) {
+        // Try to use the new iOS fullscreen API if available
+        if (document.documentElement.webkitRequestFullscreen) {
+          try {
+            document.documentElement.webkitRequestFullscreen();
+          } catch (e) {
+            console.log('iOS fullscreen API failed, using fallback');
+          }
+        }
+        
+        // Force to landscape if not already (better fullscreen experience on iOS)
+        if (window.orientation !== 90 && window.orientation !== -90) {
+          try {
+            if (screen.orientation && screen.orientation.lock) {
+              screen.orientation.lock('landscape').catch(e => console.log('Could not lock orientation:', e));
+            }
+          } catch (e) {
+            console.log('Orientation lock not supported');
+          }
+        }
+        
+        // Hide Safari UI by scrolling slightly
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+        }, 300);
+      }
+      
+      // Add iOS fullscreen styles
+      body.style.position = 'fixed';
+      body.style.top = '0';
+      body.style.left = '0';
+      body.style.width = '100%';
+      body.style.height = '100%'; // Use 100% instead of 100vh for better iOS compatibility
+      body.style.overflow = 'hidden';
+      body.style.webkitUserSelect = 'none';
+      body.style.webkitTouchCallout = 'none';
+      
+      // Add safe area insets for notched iOS devices
+      body.style.paddingTop = 'env(safe-area-inset-top)';
+      body.style.paddingBottom = 'env(safe-area-inset-bottom)';
+      body.style.paddingLeft = 'env(safe-area-inset-left)';
+      body.style.paddingRight = 'env(safe-area-inset-right)';
+      
+      // Hide controls initially in fullscreen
+      if (controls) controls.classList.add('hide');
+      if (calculator) calculator.classList.add('hide');
+      if (addTime) addTime.classList.add('hide');
+      
+      // Add fullscreen class for additional styling
+      body.classList.add('ios-fullscreen');
+      
+      isIOSFullscreen = true;
+      
+      // Update button text
+      document.getElementById('fullscreenBtn').textContent = 'Exit Fullscreen';
+      
+      // Trigger resize to adjust clock size
+      setTimeout(() => {
+        adjustForMobile();
+        window.dispatchEvent(new Event('resize'));
+      }, 300); // Longer timeout for iOS
+    }
+    
+    function exitIOSFullscreen(isIOS) {
+      const body = document.body;
+      
+      // iOS-specific exit fullscreen
+      if (isIOS) {
+        if (document.webkitExitFullscreen) {
+          try {
+            document.webkitExitFullscreen();
+          } catch (e) {
+            console.log('iOS exit fullscreen API failed');
+          }
+        }
+        
+        // Release orientation lock if possible
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (e) {
+          console.log('Orientation unlock not supported');
+        }
+      }
+      
+      // Remove iOS fullscreen styles
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.width = '';
+      body.style.height = '';
+      body.style.overflow = '';
+      body.style.webkitUserSelect = '';
+      body.style.webkitTouchCallout = '';
+      body.style.paddingTop = '';
+      body.style.paddingBottom = '';
+      body.style.paddingLeft = '';
+      body.style.paddingRight = '';
+      
+      // Remove fullscreen class
+      body.classList.remove('ios-fullscreen');
+      
+      isIOSFullscreen = false;
+      
+      // Update button text
+      document.getElementById('fullscreenBtn').textContent = 'Fullscreen';
+      
+      // Show controls temporarily
+      showControlsTemporarily();
+      
+      // Trigger resize to readjust clock size
+      setTimeout(() => {
+        adjustForMobile();
+        window.dispatchEvent(new Event('resize'));
+      }, 300); // Longer timeout for iOS
+    }
+    
+    // Handle orientation change in iOS fullscreen
+    window.addEventListener('orientationchange', function() {
+      if (isIOSFullscreen) {
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          adjustForMobile();
+        }, 500);
+      }
+    });
+    
+    // Prevent scrolling in iOS fullscreen
+    document.addEventListener('touchmove', function(e) {
+      if (isIOSFullscreen) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    function showControlsTemporarily() {
+      const controls = document.querySelector('.controls');
+      const calculator = document.querySelector('#countdownCalculator');
+      const addTime = document.querySelector('#addEffectiveTime');
+      controls.classList.remove('hide');
+      calculator.classList.remove('hide');
+      addTime.classList.remove('hide');
+      // Only show goal if not in clock mode
+      if (window.timerTag && window.timerTag.trim() && mode !== 'clock') {
+        document.getElementById('timerTagDisplay').style.display = 'block';
+      }
+      if (controls.hideTimeout) clearTimeout(controls.hideTimeout);
+      controls.hideTimeout = setTimeout(() => {
+        controls.classList.add('hide');
+        calculator.classList.add('hide');
+        addTime.classList.add('hide');
+        // Only show goal if not in clock mode
+        document.getElementById('timerTagDisplay').style.display = (window.timerTag && window.timerTag.trim() && mode !== 'clock') ? 'block' : 'none';
+      }, 5000);
+    }
+    // Improved event listeners for better mobile support
+    document.addEventListener('mousemove', showControlsTemporarily);
+    document.addEventListener('click', showControlsTemporarily);
+    document.addEventListener('keydown', showControlsTemporarily);
+    
+    // Show controls on touch for mobile with better handling
+    document.addEventListener('touchstart', showControlsTemporarily, { passive: true });
+    document.addEventListener('touchend', showControlsTemporarily, { passive: true });
+    // Prevent iOS zoom on double tap for specific elements
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+    // Handle visibility change (when tab becomes inactive/active)
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && mode === 'clock') {
+        // Refresh clock when tab becomes visible again
+        const now = new Date();
+        renderClock(now.getHours(), now.getMinutes(), now.getSeconds());
+      }
+    });
+    // Initialize
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default countdown to 30 minutes and start in countdown mode
+      document.getElementById('countdownHour').value = 0;
+      document.getElementById('countdownMinute').value = 30;
+      document.getElementById('countdownSecond').value = 0;
+      
+      // Apply mobile adjustments first
+      adjustForMobile();
+      
+      // Initialize display
+      showCountdown();
+      updateEffectiveTimeDisplay();
+      updatePendingTimeDisplay();
+      
+      // Add resize and orientation listeners
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleOrientationChange);
+      
+      // Start cyberpunk glitch effects
+      startCyberpunkGlitches();
+    });
+    // Tag functionality
+    const tagsBtn = document.getElementById('tagsBtn');
+    const timerTagDisplay = document.getElementById('timerTagDisplay');
+    const timerTagText = document.getElementById('timerTagText');
+    let timerTag = '';
+    window.timerTag = timerTag;
+
+    // Custom modal for Goal
+    const goalModal = document.getElementById('goalModal');
+    const goalInput = document.getElementById('goalInput');
+    const goalModalOk = document.getElementById('goalModalOk');
+    const goalModalCancel = document.getElementById('goalModalCancel');
+    tagsBtn.addEventListener('click', () => {
+      goalInput.value = timerTag || '';
+      goalModal.style.display = 'flex';
+      setTimeout(() => goalInput.focus(), 100);
+    });
+    goalModalOk.addEventListener('click', () => {
+      const tag = goalInput.value;
+      timerTag = tag.trim();
+      window.timerTag = timerTag;
+      if (timerTag) {
+        timerTagText.textContent = timerTag;
+        timerTagDisplay.style.display = 'block';
+      } else {
+        timerTagText.textContent = '';
+        timerTagDisplay.style.display = 'none';
+      }
+      goalModal.style.display = 'none';
+    });
+    goalModalCancel.addEventListener('click', () => {
+      goalModal.style.display = 'none';
+    });
+    goalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        goalModalOk.click();
+      } else if (e.key === 'Escape') {
+        goalModalCancel.click();
+      }
+    });
+  </script>
+</body>
+</html>
